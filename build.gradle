@@ -1,0 +1,48 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.5.RELEASE")
+  }
+}
+
+apply plugin: 'java'
+apply plugin: 'spring-boot'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+  // Spring boot
+  compile("org.springframework.boot:spring-boot-starter-web") {
+    exclude module: "spring-boot-starter-tomcat"
+  }
+  compile("org.springframework.boot:spring-boot-starter-jetty")
+  // Database
+  compile("org.springframework.boot:spring-boot-starter-jdbc")
+  // Dev tools
+  compile("org.springframework.boot:spring-boot-devtools")
+
+  // Guava libs
+  compile("com.google.guava:guava:19.0")
+
+  // Database
+  compile("com.h2database:h2")
+  compile("org.flywaydb:flyway-core")
+
+  testCompile("junit:junit")
+}
+
+// Needed for devtools
+bootRun {
+  addResources = true
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.13'
+}
