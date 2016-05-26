@@ -1,5 +1,5 @@
 # Getting Started
 
-```
-mvn spring-boot:run
+```sh
+./gradlew bootRun
 ```

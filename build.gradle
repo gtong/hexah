@@ -1,23 +1,26 @@
 buildscript {
+  ext.kotlin_version = '1.0.2'
   repositories {
     mavenCentral()
   }
   dependencies {
     classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.5.RELEASE")
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
 }
 
-apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'spring-boot'
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
+  compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   // Spring boot
   compile("org.springframework.boot:spring-boot-starter-web") {
     exclude module: "spring-boot-starter-tomcat"
@@ -28,11 +31,8 @@ dependencies {
   // Dev tools
   compile("org.springframework.boot:spring-boot-devtools")
 
-  // Guava libs
-  compile("com.google.guava:guava:19.0")
-
   // Database
-  compile("com.h2database:h2")
+  compile("com.h2database:h2:1.4.191")
   compile("org.flywaydb:flyway-core")
 
   testCompile("junit:junit")
