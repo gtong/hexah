@@ -35,6 +35,9 @@ dependencies {
   compile("com.h2database:h2:1.4.191")
   compile("org.flywaydb:flyway-core")
 
+  // HTTP
+  compile("com.google.http-client:google-http-client:1.22.0")
+
   testCompile("junit:junit")
 }
 
