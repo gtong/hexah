@@ -51,11 +51,4 @@ open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
         return jdbcTemplate.query("select $columns from $table", mapper)
     }
 
-    open fun existsCard(name: String, alternateArt: Boolean): Boolean {
-        val cards = jdbcTemplate.query(
-                "select $columns from $table where type = ? and name = ? and alternate_art = ?",
-                mapper, HexObjectType.Card.db, name, alternateArt)
-        return cards.size > 0
-    }
-
 }
