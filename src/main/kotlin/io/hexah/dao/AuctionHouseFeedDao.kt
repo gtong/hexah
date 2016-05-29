@@ -16,7 +16,7 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
                 filename = rs.getString("filename"),
                 created = rs.getTimestamp("created"),
                 updated = rs.getTimestamp("updated"),
-                type = AuctionHouseFeedType.valueOf(rs.getString("type")),
+                type = AuctionHouseFeedType.fromDB(rs.getString("type")[0]),
                 inProgress = rs.getBoolean("in_progress"),
                 numLoaded = rs.getInt("num_loaded"),
                 completed = rs.getTimestamp("completed")
@@ -29,11 +29,17 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
         val now = Date()
         jdbcTemplate.update(
                 "insert into $table (filename, created, updated, type) values (?, ?, ?, ?)",
-                filename, now, now, type.name
+                filename, now, now, type.db
         )
     }
 
     open fun findAll(): List<AuctionHouseFeed> {
         return jdbcTemplate.query("select $columns from $table", mapper)
+    }
+
+    open fun findOneToProcessByType(type: AuctionHouseFeedType): AuctionHouseFeed? {
+        return jdbcTemplate.query(
+                "select $columns from $table where type = ? and in_progress = false and completed is null order by created limit 1",
+                mapper, type.name).elementAtOrNull(0);
     }
 }

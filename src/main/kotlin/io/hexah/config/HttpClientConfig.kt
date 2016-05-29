@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration
 open class HttpClientConfig {
 
     @Bean
-    open fun httpRequestFactory() : HttpRequestFactory {
+    open fun httpRequestFactory(): HttpRequestFactory {
         return NetHttpTransport().createRequestFactory()
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component
 open class CheckAuctionHouseFeedJob @Autowired constructor(
         val httpRequestFactory: HttpRequestFactory,
         val auctionHouseFeedDao: AuctionHouseFeedDao,
+        @Value("\${jobs.run}") val runJobs: Boolean,
         @Value("\${hex.auction-house-feed.url}") val feedUrlBase: String
 ) {
 
@@ -21,6 +22,9 @@ open class CheckAuctionHouseFeedJob @Autowired constructor(
 
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     fun run() {
+        if (!runJobs) {
+            return;
+        }
         val url = feedUrlBase + "index.txt"
         val request = httpRequestFactory.buildGetRequest(GenericUrl(url))
         val response = request.execute()
@@ -35,29 +39,27 @@ open class CheckAuctionHouseFeedJob @Autowired constructor(
                     feeds.contains(filename) -> stats.exists++
                     line.contains("Data-Card") -> {
                         stats.newCardFeeds++
-                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.c)
+                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.Card)
                     }
                     line.contains("Data-Item") -> {
                         stats.newItemFeeds++
-                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.i)
+                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.Item)
                     }
                     else -> stats.ignored++
                 }
             }
         } finally {
             response.disconnect()
-            log.info(stats.toString())
+            log.info("Checked Auction House Feed: $stats")
         }
     }
 
-    private class Stats(
+    private data class Stats(
             var lines: Int = 0,
             var ignored: Int = 0,
             var exists: Int = 0,
             var newCardFeeds: Int = 0,
             var newItemFeeds: Int = 0
-    ) {
-        override fun toString() = "Loaded $lines lines. $ignored ignored, $exists existed, $newCardFeeds new card feeds, $newItemFeeds new item feeds."
-    }
+    )
 
 }

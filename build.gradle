@@ -32,11 +32,12 @@ dependencies {
   compile("org.springframework.boot:spring-boot-devtools")
 
   // Database
-  compile("com.h2database:h2:1.4.191")
+  compile("org.postgresql:postgresql:9.4.1208")
   compile("org.flywaydb:flyway-core")
 
   // HTTP
   compile("com.google.http-client:google-http-client:1.22.0")
+  compile("com.google.code.gson:gson:2.6.2")
 
   testCompile("junit:junit")
 }
