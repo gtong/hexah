@@ -33,6 +33,14 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
         )
     }
 
+    open fun save(feed: AuctionHouseFeed) {
+        val now = Date()
+        jdbcTemplate.update(
+                "update $table set in_progress = ?, num_loaded = ?, completed = ?, updated = ? where filename = ?",
+                feed.inProgress, feed.numLoaded, feed.completed, now, feed.filename
+        )
+    }
+
     open fun findAll(): List<AuctionHouseFeed> {
         return jdbcTemplate.query("select $columns from $table", mapper)
     }
@@ -40,6 +48,6 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
     open fun findOneToProcessByType(type: AuctionHouseFeedType): AuctionHouseFeed? {
         return jdbcTemplate.query(
                 "select $columns from $table where type = ? and in_progress = false and completed is null order by created limit 1",
-                mapper, type.name).elementAtOrNull(0);
+                mapper, type.db).elementAtOrNull(0);
     }
 }

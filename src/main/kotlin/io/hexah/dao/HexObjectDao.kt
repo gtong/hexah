@@ -23,25 +23,27 @@ open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
                 name = rs.getString("name"),
                 type = HexObjectType.fromDB(rs.getString("type")[0]),
                 rarity = HexObjectRarity.fromDB(rs.getInt("rarity")),
-                alternateArt = rs.getBoolean("alternate_art")
+                alternateArt = rs.getBoolean("alternate_art"),
+                imagePath = rs.getString("image_path")
         )
     }
     val table = "hex_objects"
-    val columns = "id, created, updated, guid, set_guid, name, type, rarity, alternate_art"
+    val columns = "id, created, updated, guid, set_guid, name, type, rarity, alternate_art, image_path"
 
-    open fun add(guid: String, setGuid: String, name: String, type: HexObjectType, rarity: HexObjectRarity, alternateArt: Boolean): Int {
+    open fun add(guid: String, setGuid: String, name: String, type: HexObjectType, rarity: HexObjectRarity, alternateArt: Boolean, imagePath: String): Int {
         val now = Date()
         val insert = SimpleJdbcInsert(jdbcTemplate).withTableName(table).usingGeneratedKeyColumns("id")
 
         val id = insert.executeAndReturnKey(mapOf(
-                "CREATED" to now,
-                "UPDATED" to now,
-                "GUID" to guid,
-                "SET_GUID" to setGuid,
-                "NAME" to name,
-                "TYPE" to type.db,
-                "RARITY" to rarity.db,
-                "ALTERNATE_ART" to alternateArt
+                "created" to now,
+                "updated" to now,
+                "guid" to guid,
+                "set_guid" to setGuid,
+                "name" to name,
+                "type" to type.db,
+                "rarity" to rarity.db,
+                "alternate_art" to alternateArt,
+                "image_path" to imagePath
         ))
 
         return id.toInt()

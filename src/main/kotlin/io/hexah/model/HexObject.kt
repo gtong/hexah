@@ -31,5 +31,6 @@ data class HexObject(
         val name: String,
         val type: HexObjectType,
         val rarity: HexObjectRarity,
-        val alternateArt: Boolean
+        val alternateArt: Boolean,
+        val imagePath: String
 )

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 open class CheckAuctionHouseFeedJob @Autowired constructor(
         val httpRequestFactory: HttpRequestFactory,
         val auctionHouseFeedDao: AuctionHouseFeedDao,
-        @Value("\${jobs.run}") val runJobs: Boolean,
+        @Value("\${jobs.feed.run}") val runJob: Boolean,
         @Value("\${hex.auction-house-feed.url}") val feedUrlBase: String
 ) {
 
@@ -22,9 +22,10 @@ open class CheckAuctionHouseFeedJob @Autowired constructor(
 
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     fun run() {
-        if (!runJobs) {
+        if (!runJob) {
             return;
         }
+        log.info("Checking Auction House Feed")
         val url = feedUrlBase + "index.txt"
         val request = httpRequestFactory.buildGetRequest(GenericUrl(url))
         val response = request.execute()

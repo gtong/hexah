@@ -18,7 +18,7 @@ import javax.annotation.PostConstruct
 @DependsOn("flywayInitializer")
 open class LoadHexGamedataJob @Autowired constructor(
         val hexObjectDao: HexObjectDao,
-        @Value("\${jobs.run}") val runJobs: Boolean
+        @Value("\${jobs.gamedata.run}") val runJob: Boolean
 ) {
 
     val FILENAME = "data/gamedata.gz"
@@ -28,6 +28,10 @@ open class LoadHexGamedataJob @Autowired constructor(
 
     @PostConstruct
     fun init() {
+        if (!runJob) {
+            return
+        }
+        log.info("Loading Hex Game Data from $FILENAME")
         val file = File(FILENAME)
         if (!file.exists()) {
             throw RuntimeException("Could not find $FILENAME")
@@ -66,7 +70,8 @@ open class LoadHexGamedataJob @Autowired constructor(
             val name = json.get("m_Name").asString
             val rarity = HexObjectRarity.valueOf(json.get("m_CardRarity").asString)
             val alternateArt = json.get("m_HasAlternateArt").asInt == 1
-            hexObjectDao.add(guid, setGuid, name, HexObjectType.Card, rarity, alternateArt)
+            val imagePath = json.get("m_CardImagePath").asString.replace("""\\""", """\""")
+            hexObjectDao.add(guid, setGuid, name, HexObjectType.Card, rarity, alternateArt, imagePath)
             stats.cardsAdded++
         } catch (e: Throwable) {
             log.error("Error adding card [$content]", e)
