@@ -33,7 +33,7 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
         )
     }
 
-    open fun save(feed: AuctionHouseFeed) {
+    open fun update(feed: AuctionHouseFeed) {
         val now = Date()
         jdbcTemplate.update(
                 "update $table set in_progress = ?, num_loaded = ?, completed = ?, updated = ? where filename = ?",
@@ -47,7 +47,7 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
 
     open fun findOneToProcessByType(type: AuctionHouseFeedType): AuctionHouseFeed? {
         return jdbcTemplate.query(
-                "select $columns from $table where type = ? and in_progress = false and completed is null order by created limit 1",
+                "select $columns from $table where type = ? and in_progress = false and completed is null order by created limit 1 for update",
                 mapper, type.db).elementAtOrNull(0);
     }
 }

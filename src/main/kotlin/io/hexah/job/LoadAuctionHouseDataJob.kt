@@ -2,6 +2,7 @@ package io.hexah.job
 
 import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequestFactory
+import io.hexah.dao.AuctionHouseAggregateDao
 import io.hexah.dao.AuctionHouseDataDao
 import io.hexah.dao.AuctionHouseFeedDao
 import io.hexah.dao.HexObjectDao
@@ -22,15 +23,18 @@ import java.util.concurrent.Executors
 
 @Component
 open class LoadAuctionHouseDataJob @Autowired constructor(
-        val httpRequestFactory: HttpRequestFactory,
-        val auctionHouseFeedDao: AuctionHouseFeedDao,
+        val auctionHouseAggregateDao: AuctionHouseAggregateDao,
         val auctionHouseDataDao: AuctionHouseDataDao,
+        val auctionHouseFeedDao: AuctionHouseFeedDao,
         val hexObjectDao: HexObjectDao,
+        val httpRequestFactory: HttpRequestFactory,
         val txManager: PlatformTransactionManager,
         @Value("\${jobs.feed.run}") val runJob: Boolean,
         @Value("\${jobs.feed.threads}") val threads: Int,
         @Value("\${hex.auction-house-feed.url}") val feedUrlBase: String
 ) {
+    val DAY_IN_MS = 1000 * 60 * 60 * 24
+
     val log = LoggerFactory.getLogger(javaClass)
     val txDefinition = DefaultTransactionDefinition()
     val executor = Executors.newFixedThreadPool(threads)
@@ -38,13 +42,24 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
 
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     fun run() {
-        val feed = auctionHouseFeedDao.findOneToProcessByType(AuctionHouseFeedType.Card)
+        val tx = txManager.getTransaction(txDefinition)
+        var feed: AuctionHouseFeed? = null
+        try {
+            feed = auctionHouseFeedDao.findOneToProcessByType(AuctionHouseFeedType.Card)
+            if (feed != null) {
+                feed.inProgress = true
+                auctionHouseFeedDao.update(feed)
+            }
+            txManager.commit(tx)
+        } catch (t: Throwable) {
+            txManager.rollback(tx)
+        }
         if (feed != null) {
             val stats = processCardFeed(feed)
-            feed.numLoaded = stats.rowsSaved
+            feed.numLoaded = stats.lines
             feed.inProgress = false
             feed.completed = Date()
-            auctionHouseFeedDao.save(feed)
+            auctionHouseFeedDao.update(feed)
         }
     }
 
@@ -57,7 +72,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         return nameLookup
     }
 
-    private fun processCardFeed(feed : AuctionHouseFeed): CardStats {
+    private fun processCardFeed(feed: AuctionHouseFeed): CardStats {
         log.info("Loading Auction House Card Data from ${feed.filename}")
         val stats = CardStats()
         var nameLookup = getNameLookup()
@@ -85,7 +100,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         return stats
     }
 
-    private fun processCardRows(stats: CardStats, nameLookup: Map<String, String>, rows : List<CardRow>) {
+    private fun processCardRows(stats: CardStats, nameLookup: Map<String, String>, rows: List<CardRow>) {
         if (rows.size == 0) {
             return
         }
@@ -117,10 +132,35 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
             }
             txManager.commit(tx)
             stats.rowsSaved += adds
+            calculateAggregate(name)
         } catch (t: Throwable) {
             txManager.rollback(tx)
             stats.rollbacks++
             throw t
+        }
+    }
+
+    private fun calculateAggregate(name: String) {
+        val now = Date()
+        val data = auctionHouseDataDao.findByName(name)
+        val last7date = Date(now.time - 8 * DAY_IN_MS)
+        val daysInTrading = (now.time - data.first().date.time) / DAY_IN_MS + 1
+        data.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
+            val totalData = entry.value
+            val last7data = totalData.filter { it.date.time >= last7date.time }
+            auctionHouseAggregateDao.save(
+                    name = name,
+                    rarity = entry.key.first,
+                    currency = entry.key.second,
+                    totalTrades = totalData.sumBy { it.trades },
+                    totalTradesPerDay = totalData.sumBy { it.trades }.toDouble() / daysInTrading,
+                    totalMedian = average(totalData.map { it.median }),
+                    totalAverage = averageDouble(totalData.map { it.average }),
+                    last7Trades = last7data.sumBy { it.trades },
+                    last7TradesPerDay = last7data.sumBy { it.trades }.toDouble() / daysInTrading,
+                    last7Median = average(last7data.map { it.median }),
+                    last7Average = averageDouble(last7data.map { it.average })
+            )
         }
     }
 
@@ -134,8 +174,19 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
     }
 
     private fun average(values: List<Int>): Double {
+        if (values.size == 0) {
+            return 0.0
+        }
         return values.sum().toDouble() / values.size
     }
+
+    private fun averageDouble(values: List<Double>): Double {
+        if (values.size == 0) {
+            return 0.0
+        }
+        return values.sum() / values.size
+    }
+
 
     private class CardRow {
         val name: String

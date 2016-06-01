@@ -39,4 +39,8 @@ open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemp
         )
     }
 
+    open fun findByName(name: String): List<AuctionHouseData> {
+        return jdbcTemplate.query("select $columns from $table where name = ? order by date", mapper, name)
+    }
+
 }
