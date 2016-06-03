@@ -1,50 +1,62 @@
 buildscript {
-  ext.kotlin_version = '1.0.2'
-  repositories {
-    mavenCentral()
-  }
-  dependencies {
-    classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.5.RELEASE")
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-  }
+    ext.kotlin_version = '1.0.2'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.5.RELEASE")
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
 }
+
+version 1.0
 
 apply plugin: 'kotlin'
 apply plugin: 'spring-boot'
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-  compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  // Spring boot
-  compile("org.springframework.boot:spring-boot-starter-web") {
-    exclude module: "spring-boot-starter-tomcat"
-  }
-  compile("org.springframework.boot:spring-boot-starter-jetty")
-  // Database
-  compile("org.springframework.boot:spring-boot-starter-jdbc")
-  // Dev tools
-  compile("org.springframework.boot:spring-boot-devtools")
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    // Spring boot
+    compile("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: "spring-boot-starter-tomcat"
+    }
+    compile("org.springframework.boot:spring-boot-starter-jetty")
+    // Database
+    compile("org.springframework.boot:spring-boot-starter-jdbc")
+    // Dev tools
+    compile("org.springframework.boot:spring-boot-devtools")
 
-  // Database
-  compile("org.postgresql:postgresql:9.4.1208")
-  compile("org.flywaydb:flyway-core")
+    // Database
+    compile("org.postgresql:postgresql:9.4.1208")
+    compile("org.flywaydb:flyway-core")
 
-  // HTTP
-  compile("com.google.http-client:google-http-client:1.22.0")
-  compile("com.google.code.gson:gson:2.6.2")
+    // HTTP
+    compile("com.google.http-client:google-http-client:1.22.0")
+    compile("com.google.code.gson:gson:2.6.2")
 
-  testCompile("junit:junit")
+    testCompile("junit:junit")
 }
+
+jar {
+    from('frontend/index.html') {
+        into 'public'
+    }
+    from('frontend/dist') {
+        into 'public/static'
+    }
+}
+processResources.dependsOn('frontend:bundle')
 
 // Needed for devtools
 bootRun {
-  addResources = true
+    addResources = true
 }
 
 task wrapper(type: Wrapper) {

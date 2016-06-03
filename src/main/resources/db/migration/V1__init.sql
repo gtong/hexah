@@ -29,14 +29,7 @@ CREATE TABLE auction_house_aggregates (
   currency char not null,
   created timestamp with time zone not null,
   updated timestamp with time zone not null,
-  total_trades int not null,
-  total_trades_per_day numeric(10,2) not null,
-  total_median numeric(10,2) not null,
-  total_average numeric(10,2) not null,
-  last7_trades int not null,
-  last7_trades_per_day numeric(10,2) not null,
-  last7_median numeric(10,2) not null,
-  last7_average numeric(10,2) not null,
+  stats json not null,
   primary key(name, rarity, currency)
 );
 

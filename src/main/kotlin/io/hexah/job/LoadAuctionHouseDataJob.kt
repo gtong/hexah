@@ -17,6 +17,9 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionDefinition
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
@@ -130,9 +133,9 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
                 )
                 adds++
             }
+            calculateAggregate(name)
             txManager.commit(tx)
             stats.rowsSaved += adds
-            calculateAggregate(name)
         } catch (t: Throwable) {
             txManager.rollback(tx)
             stats.rollbacks++
@@ -152,16 +155,24 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
                     name = name,
                     rarity = entry.key.first,
                     currency = entry.key.second,
-                    totalTrades = totalData.sumBy { it.trades },
-                    totalTradesPerDay = totalData.sumBy { it.trades }.toDouble() / daysInTrading,
-                    totalMedian = average(totalData.map { it.median }),
-                    totalAverage = averageDouble(totalData.map { it.average }),
-                    last7Trades = last7data.sumBy { it.trades },
-                    last7TradesPerDay = last7data.sumBy { it.trades }.toDouble() / daysInTrading,
-                    last7Median = average(last7data.map { it.median }),
-                    last7Average = averageDouble(last7data.map { it.average })
+                    stats = mapOf(
+                            "total_trades" to totalData.sumBy { it.trades },
+                            "total_trades_per_day" to round(totalData.sumBy { it.trades }.toDouble() / daysInTrading),
+                            "total_average_median" to round(average(totalData.map { it.median })),
+                            "total_average_average" to round(averageDouble(totalData.map { it.average })),
+                            "last_7_trades" to last7data.sumBy { it.trades },
+                            "last_7_trades_per_day" to round(last7data.sumBy { it.trades }.toDouble() / daysInTrading),
+                            "last_7_average_median" to round(average(last7data.map { it.median })),
+                            "last_7_average_average" to round(averageDouble(last7data.map { it.average }))
+                    )
             )
         }
+    }
+
+    private fun round(value: Double): BigDecimal {
+        val format = DecimalFormat("#.0000")
+        format.roundingMode = RoundingMode.HALF_UP
+        return BigDecimal(format.format(value))
     }
 
     private fun median(sorted: List<Int>): Int {

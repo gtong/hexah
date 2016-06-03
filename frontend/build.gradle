@@ -1,0 +1,16 @@
+plugins {
+    id "com.moowork.node" version "0.10"
+}
+
+version '1.0'
+
+task bundle(type: NpmTask) {
+    args = ['run', 'bundle']
+}
+
+task start(type: NpmTask) {
+    args = ['start']
+}
+
+start.dependsOn(npm_install)
+bundle.dependsOn(npm_install)
