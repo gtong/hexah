@@ -18,7 +18,7 @@ open class AuctionHouseAggregateDao @Autowired constructor(val jdbcTemplate: Jdb
     val parser = JsonParser()
     val gson = Gson()
 
-    val mapper = RowMapper<AuctionHouseAggregate>() { rs, rowNum ->
+    val mapper = RowMapper { rs, rowNum ->
         AuctionHouseAggregate(
                 name = rs.getString("name"),
                 rarity = HexObjectRarity.fromDB(rs.getInt("rarity")),
@@ -28,8 +28,15 @@ open class AuctionHouseAggregateDao @Autowired constructor(val jdbcTemplate: Jdb
                 stats = fromJson(rs.getString("stats"))
         )
     }
+    val pairMapper = RowMapper { rs, i ->
+        Pair(rs.getString("name"), HexObjectRarity.fromDB(rs.getInt("rarity")))
+    }
     val table = "auction_house_aggregates"
     val columns = "name, rarity, currency, created, updated, stats"
+
+    open fun findAllNameRarity(): List<Pair<String, HexObjectRarity>> {
+        return jdbcTemplate.query("select name, rarity from $table group by name, rarity", pairMapper);
+    }
 
     open fun save(name: String, rarity: HexObjectRarity, currency: AuctionHouseCurrency, stats: Map<String, Number>) {
         val now = Date()

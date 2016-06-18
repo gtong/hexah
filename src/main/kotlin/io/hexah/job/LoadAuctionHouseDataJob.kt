@@ -45,6 +45,9 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
 
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     fun run() {
+        if (!runJob) {
+            return;
+        }
         val tx = txManager.getTransaction(txDefinition)
         var feed: AuctionHouseFeed? = null
         try {

@@ -13,12 +13,16 @@ module.exports = {
     filename: 'bundle.js',
     publicPath: '/static/'
   },
+  resolve: {
+    extensions: ["", ".jsx", ".js"],
+    modulesDirectories: ["src", "node_modules"]
+  },
   plugins: [
     new webpack.HotModuleReplacementPlugin()
   ],
   module: {
     loaders: [{
-      test: /\.js$/,
+      test: /\.jsx?$/,
       loaders: ['react-hot', 'babel'],
       include: path.join(__dirname, 'src')
     }]

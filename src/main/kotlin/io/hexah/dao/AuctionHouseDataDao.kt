@@ -12,7 +12,7 @@ import java.util.*
 @Repository
 open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
 
-    val mapper = RowMapper<AuctionHouseData>() { rs, rowNum ->
+    val mapper = RowMapper { rs, rowNum ->
         AuctionHouseData(
                 date = rs.getDate("date"),
                 name = rs.getString("name"),

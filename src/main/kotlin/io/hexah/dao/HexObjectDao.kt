@@ -13,7 +13,7 @@ import java.util.*
 @Repository
 open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
 
-    val mapper = RowMapper<HexObject>() { rs, rowNum ->
+    val mapper = RowMapper { rs, rowNum ->
         HexObject(
                 id = rs.getInt("id"),
                 created = rs.getTimestamp("created"),

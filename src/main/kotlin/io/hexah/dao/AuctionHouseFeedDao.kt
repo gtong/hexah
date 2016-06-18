@@ -11,7 +11,7 @@ import java.util.*
 @Repository
 open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
 
-    val mapper = RowMapper<AuctionHouseFeed>() { rs, rowNum ->
+    val mapper = RowMapper { rs, rowNum ->
         AuctionHouseFeed(
                 filename = rs.getString("filename"),
                 created = rs.getTimestamp("created"),
