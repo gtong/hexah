@@ -4,13 +4,8 @@ plugins {
 
 version '1.0'
 
-task bundle(type: NpmTask) {
-    args = ['run', 'bundle']
+task build(type: NpmTask) {
+    args = ['run', 'build']
 }
 
-task start(type: NpmTask) {
-    args = ['start']
-}
-
-start.dependsOn(npm_install)
-bundle.dependsOn(npm_install)
+build.dependsOn(npm_install)

@@ -49,14 +49,14 @@ dependencies {
 }
 
 jar {
-    from('frontend/index.html') {
+    from('frontend/public') {
         into 'public'
     }
     from('frontend/dist') {
         into 'public/static'
     }
 }
-jar.dependsOn('frontend:bundle')
+jar.dependsOn('frontend:build')
 
 // Needed for devtools
 bootRun {
