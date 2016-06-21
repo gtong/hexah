@@ -17,6 +17,7 @@ open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemp
                 date = rs.getDate("date"),
                 name = rs.getString("name"),
                 rarity = HexObjectRarity.fromDB(rs.getInt("rarity")),
+                nameKey = rs.getString("name_key"),
                 currency = AuctionHouseCurrency.fromDB(rs.getString("currency")[0]),
                 created = rs.getTimestamp("created"),
                 updated = rs.getTimestamp("updated"),
@@ -28,14 +29,14 @@ open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemp
         )
     }
     val table = "auction_house_data"
-    val columns = "date, name, rarity, currency, created, updated, trades, low, high, median, average"
+    val columns = "date, name, rarity, name_key, currency, created, updated, trades, low, high, median, average"
 
-    open fun add(date: Date, name: String, rarity: HexObjectRarity, currency: AuctionHouseCurrency, trades: Int, low: Int, high: Int, median: Int, average: Double) {
+    open fun add(date: Date, name: String, nameKey: String, rarity: HexObjectRarity, currency: AuctionHouseCurrency, trades: Int, low: Int, high: Int, median: Int, average: Double) {
         val now = Date()
         jdbcTemplate.update("""insert into auction_house_data
-                (date, name, rarity, currency, created, updated, trades, low, high, median, average)
-                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                date, name, rarity.db, currency.db, now, now, trades, low, high, median, average
+                (date, name, rarity, name_key, currency, created, updated, trades, low, high, median, average)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                date, name, rarity.db, nameKey, currency.db, now, now, trades, low, high, median, average
         )
     }
 

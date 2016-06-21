@@ -7,7 +7,7 @@ import ItemContainer from "./containers/ItemContainer";
 var router = (
   <Router history={browserHistory}>
     <Route path="/" component={App}>
-	  <Route name="item" path="/i/:itemName" component={ItemContainer} />
+	  <Route name="item" path="/i/:item" component={ItemContainer} />
 	</Route>
   </Router>
 );

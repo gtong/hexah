@@ -19,6 +19,7 @@ data class AuctionHouseData(
         val date: Date,
         val name: String,
         val rarity: HexObjectRarity,
+        val nameKey: String,
         val currency: AuctionHouseCurrency,
         val created: Date,
         val updated: Date,

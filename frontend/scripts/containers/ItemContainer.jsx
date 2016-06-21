@@ -1,12 +1,14 @@
 import React, {Component} from 'react';
+import ItemSummary from '../components/ItemSummary';
 
 require('./styles/main.scss');
 
 class ItemContainer extends Component {
   render() {
+    let params = this.props.params;
     return (
       <div id="main" className="ui container">
-        <h1>{this.props.params.itemName}</h1>
+        <ItemSummary nameKey={params.item}/>
       </div>
     );
   }

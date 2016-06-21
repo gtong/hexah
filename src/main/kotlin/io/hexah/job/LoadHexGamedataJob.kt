@@ -4,6 +4,7 @@ import com.google.gson.JsonParser
 import io.hexah.dao.HexObjectDao
 import io.hexah.model.HexObjectRarity
 import io.hexah.model.HexObjectType
+import io.hexah.util.getNameKey
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -69,9 +70,10 @@ open class LoadHexGamedataJob @Autowired constructor(
             }
             val name = json.get("m_Name").asString
             val rarity = HexObjectRarity.valueOf(json.get("m_CardRarity").asString)
+            val nameKey = getNameKey(name, rarity)
             val alternateArt = json.get("m_HasAlternateArt").asInt == 1
             val imagePath = json.get("m_CardImagePath").asString.replace("""\\""", """\""")
-            hexObjectDao.add(guid, setGuid, name, HexObjectType.Card, rarity, alternateArt, imagePath)
+            hexObjectDao.add(guid, setGuid, HexObjectType.Card, name, rarity, nameKey, alternateArt, imagePath)
             stats.cardsAdded++
         } catch (e: Throwable) {
             log.error("Error adding card [$content]", e)

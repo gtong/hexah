@@ -28,9 +28,10 @@ data class HexObject(
         val updated: Date,
         val guid: String,
         val setGuid: String,
-        val name: String,
         val type: HexObjectType,
+        val name: String,
         val rarity: HexObjectRarity,
+        val nameKey: String,
         val alternateArt: Boolean,
         val imagePath: String
 )

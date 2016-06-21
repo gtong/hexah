@@ -10,6 +10,7 @@ import io.hexah.model.AuctionHouseCurrency
 import io.hexah.model.AuctionHouseFeed
 import io.hexah.model.AuctionHouseFeedType
 import io.hexah.model.HexObjectRarity
+import io.hexah.util.getNameKey
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -32,8 +33,8 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         val hexObjectDao: HexObjectDao,
         val httpRequestFactory: HttpRequestFactory,
         val txManager: PlatformTransactionManager,
-        @Value("\${jobs.feed.run}") val runJob: Boolean,
-        @Value("\${jobs.feed.threads}") val threads: Int,
+        @Value("\${jobs.loadfeed.run}") val runJob: Boolean,
+        @Value("\${jobs.loadfeed.threads}") val threads: Int,
         @Value("\${hex.auction-house-feed.url}") val feedUrlBase: String
 ) {
     val DAY_IN_MS = 1000 * 60 * 60 * 24
@@ -43,7 +44,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
     val executor = Executors.newFixedThreadPool(threads)
     val dateFormatter = SimpleDateFormat("yyyy-MM-dd")
 
-    @Scheduled(fixedDelay = 1000 * 60 * 60)
+    @Scheduled(fixedDelayString = "\${jobs.loadfeed.delay}")
     fun run() {
         if (!runJob) {
             return;
@@ -122,12 +123,14 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         try {
             var adds = 0;
             rows.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
+                val (rarity, currency) = entry.key
                 val sorted = entry.value.map { it.price }.sorted()
                 auctionHouseDataDao.add(
                         date = ref.date,
                         name = name,
-                        rarity = entry.key.first,
-                        currency = entry.key.second,
+                        rarity = rarity,
+                        nameKey = getNameKey(name, rarity),
+                        currency = currency,
                         trades = sorted.size,
                         low = sorted.first(),
                         high = sorted.last(),
@@ -152,12 +155,14 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         val last7date = Date(now.time - 8 * DAY_IN_MS)
         val daysInTrading = (now.time - data.first().date.time) / DAY_IN_MS + 1
         data.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
+            val (rarity, currency) = entry.key
             val totalData = entry.value
             val last7data = totalData.filter { it.date.time >= last7date.time }
             auctionHouseAggregateDao.save(
                     name = name,
-                    rarity = entry.key.first,
-                    currency = entry.key.second,
+                    rarity = rarity,
+                    nameKey = getNameKey(name, rarity),
+                    currency = currency,
                     stats = mapOf(
                             "total_trades" to totalData.sumBy { it.trades },
                             "total_trades_per_day" to round(totalData.sumBy { it.trades }.toDouble() / daysInTrading),

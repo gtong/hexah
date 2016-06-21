@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import find from 'lodash/find';
 
 class Search extends Component {
   constructor(props) {
@@ -27,7 +28,10 @@ class Search extends Component {
   }
 
   setValue(value) {
-    this.context.router.push("/i/" + value);
+    let item = find(this.state.items, ['name', value]);
+    if (item) {
+      this.context.router.push("/i/" + item.id);
+    }
   }
 
   render() {
@@ -45,7 +49,7 @@ class Search extends Component {
 }
 
 Search.contextTypes = {
-    router: React.PropTypes.object.isRequired
+  router: React.PropTypes.object.isRequired
 };
 
 export default Search;
