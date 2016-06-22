@@ -102,7 +102,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
             }
         } finally {
             response.disconnect()
-            log.info("Loaded Auction House Card Data: $stats")
+            log.info("Loaded Auction House Card Data from ${feed.filename}: $stats")
         }
         return stats
     }
@@ -152,26 +152,30 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
     private fun calculateAggregate(name: String) {
         val now = Date()
         val data = auctionHouseDataDao.findByName(name)
-        val last7date = Date(now.time - 8 * DAY_IN_MS)
-        val daysInTrading = (now.time - data.first().date.time) / DAY_IN_MS + 1
         data.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
             val (rarity, currency) = entry.key
-            val totalData = entry.value
-            val last7data = totalData.filter { it.date.time >= last7date.time }
+            val totalData = entry.value.sortedBy { it.date }.reversed()
+            val totalDays = (totalData.first().date.time - totalData.last().date.time) / DAY_IN_MS + 1
+            val last7Data = if (totalData.size > 7) totalData.slice(0..6) else totalData
+            val last7Days = (last7Data.first().date.time - last7Data.last().date.time) / DAY_IN_MS + 1
+            val recentData = if (totalData.size > 1) totalData.slice(0..0) else totalData
             auctionHouseAggregateDao.save(
                     name = name,
                     rarity = rarity,
                     nameKey = getNameKey(name, rarity),
                     currency = currency,
                     stats = mapOf(
+                            "recent_trades" to recentData.sumBy { it.trades },
+                            "recent_median" to recentData.sumBy { it.median },
+                            "recent_average" to round(recentData.sumByDouble { it.average }),
+                            "last_7_trades" to last7Data.sumBy { it.trades },
+                            "last_7_trades_per_day" to round(last7Data.sumBy { it.trades }.toDouble() / last7Days),
+                            "last_7_average_median" to round(average(last7Data.map { it.median })),
+                            "last_7_average_average" to round(averageDouble(last7Data.map { it.average })),
                             "total_trades" to totalData.sumBy { it.trades },
-                            "total_trades_per_day" to round(totalData.sumBy { it.trades }.toDouble() / daysInTrading),
+                            "total_trades_per_day" to round(totalData.sumBy { it.trades }.toDouble() / totalDays),
                             "total_average_median" to round(average(totalData.map { it.median })),
-                            "total_average_average" to round(averageDouble(totalData.map { it.average })),
-                            "last_7_trades" to last7data.sumBy { it.trades },
-                            "last_7_trades_per_day" to round(last7data.sumBy { it.trades }.toDouble() / daysInTrading),
-                            "last_7_average_median" to round(average(last7data.map { it.median })),
-                            "last_7_average_average" to round(averageDouble(last7data.map { it.average }))
+                            "total_average_average" to round(averageDouble(totalData.map { it.average }))
                     )
             )
         }
