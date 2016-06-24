@@ -150,7 +150,6 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
     }
 
     private fun calculateAggregate(name: String) {
-        val now = Date()
         val data = auctionHouseDataDao.findByName(name)
         data.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
             val (rarity, currency) = entry.key
@@ -190,7 +189,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
     private fun median(sorted: List<Int>): Int {
         if (sorted.size % 2 == 0) {
             val mid = sorted.size / 2 - 1
-            return Math.round(sorted[mid] + sorted[mid + 1] / 2.0).toInt()
+            return Math.round((sorted[mid] + sorted[mid + 1]) / 2.0).toInt()
         } else {
             return sorted[sorted.size / 2]
         }

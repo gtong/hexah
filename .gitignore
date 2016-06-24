@@ -1,6 +1,7 @@
 /.gradle/
 /.idea/
 /build/
+/frontend/public/images
 
 .DS_Store
 *.iml

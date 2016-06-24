@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
+import isEmpty from 'lodash/isEmpty';
 import ItemSummary from '../components/ItemSummary';
+import ItemCharts from '../components/ItemCharts';
 
 require('./styles/main.scss');
 
@@ -32,14 +34,19 @@ class ItemContainer extends Component {
 
   render() {
     let summary = this.state.summary;
-    return (
-      <div id="main" className="ui grid container">
-        <div className="row">
-	      <h1 className="ui dividing header column">{summary.name}</h1>
-	    </div>
-        <ItemSummary summary={summary}/>
-      </div>
-    );
+    if (isEmpty(summary)) {
+      return (
+        <div id="main" className="ui grid container"></div>
+      )
+    } else {
+      return (
+        <div id="main" className="ui grid container">
+          <h1 className="ui dividing header sixteen wide column">{summary.name}</h1>
+          <ItemSummary summary={summary}/>
+          <ItemCharts nameKey={this.props.params.nameKey}/>
+        </div>
+      );
+    }
   }
 }
 

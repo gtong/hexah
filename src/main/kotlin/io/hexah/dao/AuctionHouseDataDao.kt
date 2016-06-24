@@ -12,9 +12,11 @@ import java.util.*
 @Repository
 open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
 
+    val gmt = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+
     val mapper = RowMapper { rs, rowNum ->
         AuctionHouseData(
-                date = rs.getDate("date"),
+                date = rs.getDate("date", gmt),
                 name = rs.getString("name"),
                 rarity = HexObjectRarity.fromDB(rs.getInt("rarity")),
                 nameKey = rs.getString("name_key"),
@@ -40,8 +42,10 @@ open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemp
         )
     }
 
-    open fun findByName(name: String): List<AuctionHouseData> {
-        return jdbcTemplate.query("select $columns from $table where name = ? order by date", mapper, name)
-    }
+    open fun findByName(name: String) =
+        jdbcTemplate.query("select $columns from $table where name = ? order by date", mapper, name)
+
+    open fun findByNameKey(nameKey: String) =
+        jdbcTemplate.query("select $columns from $table where name_key = ? order by date", mapper, nameKey)
 
 }
