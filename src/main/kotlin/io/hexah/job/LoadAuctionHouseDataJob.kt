@@ -24,6 +24,8 @@ import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.Phaser
+import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 open class LoadAuctionHouseDataJob @Autowired constructor(
@@ -63,7 +65,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         }
         if (feed != null) {
             val stats = processCardFeed(feed)
-            feed.numLoaded = stats.lines
+            feed.numLoaded = stats.lines.get()
             feed.inProgress = false
             feed.completed = Date()
             auctionHouseFeedDao.update(feed)
@@ -86,20 +88,30 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         val url = feedUrlBase + feed.filename
         val request = httpRequestFactory.buildGetRequest(GenericUrl(url))
         val response = request.execute()
+        val phaser = Phaser()
         try {
+            phaser.register()
             var currentName = ""
             var rows = ArrayList<CardRow>()
             response.content.bufferedReader().forEachLine { line ->
-                stats.lines++
+                stats.lines.incrementAndGet()
                 val row = CardRow(line, dateFormatter)
                 if (!currentName.equals(row.name)) {
                     val r = ArrayList<CardRow>(rows)
-                    executor.execute { processCardRows(stats, nameLookup, r) }
+                    phaser.register()
+                    executor.execute {
+                        try {
+                            processCardRows(stats, nameLookup, r)
+                        } finally {
+                            phaser.arrive()
+                        }
+                    }
                     rows.clear()
                     currentName = row.name
                 }
                 rows.add(row)
             }
+            phaser.arriveAndAwaitAdvance()
         } finally {
             response.disconnect()
             log.info("Loaded Auction House Card Data from ${feed.filename}: $stats")
@@ -111,12 +123,12 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         if (rows.size == 0) {
             return
         }
-        stats.cards++
+        stats.cards.incrementAndGet()
         val ref = rows.first()
         val name = nameLookup[ref.name.toLowerCase()]
         if (name == null) {
             log.error("Could not find card [${ref.name}]")
-            stats.nameErrors++
+            stats.nameErrors.incrementAndGet()
             return
         }
         val tx = txManager.getTransaction(txDefinition)
@@ -141,23 +153,24 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
             }
             calculateAggregate(name)
             txManager.commit(tx)
-            stats.rowsSaved += adds
+            stats.rowsSaved.addAndGet(adds)
         } catch (t: Throwable) {
             txManager.rollback(tx)
-            stats.rollbacks++
+            stats.rollbacks.incrementAndGet()
             throw t
         }
     }
 
     private fun calculateAggregate(name: String) {
-        val data = auctionHouseDataDao.findByName(name)
+        val now = Date()
+        val data = auctionHouseDataDao.findByName(name).sortedBy { it.date }
+        val last7Date = Date(now.time - 8 * DAY_IN_MS)
+        val totalDays = (now.time - data.first().date.time) / DAY_IN_MS + 1
         data.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
             val (rarity, currency) = entry.key
-            val totalData = entry.value.sortedBy { it.date }.reversed()
-            val totalDays = (totalData.first().date.time - totalData.last().date.time) / DAY_IN_MS + 1
-            val last7Data = if (totalData.size > 7) totalData.slice(0..6) else totalData
-            val last7Days = (last7Data.first().date.time - last7Data.last().date.time) / DAY_IN_MS + 1
-            val recentData = if (totalData.size > 1) totalData.slice(0..0) else totalData
+            val totalData = entry.value
+            val last7Data = totalData.filter { it.date.time > last7Date.time };
+            val recentData = if (totalData.size > 1) totalData.reversed().slice(0..0) else totalData
             auctionHouseAggregateDao.save(
                     name = name,
                     rarity = rarity,
@@ -168,7 +181,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
                             "recent_median" to recentData.sumBy { it.median },
                             "recent_average" to round(recentData.sumByDouble { it.average }),
                             "last_7_trades" to last7Data.sumBy { it.trades },
-                            "last_7_trades_per_day" to round(last7Data.sumBy { it.trades }.toDouble() / last7Days),
+                            "last_7_trades_per_day" to round(last7Data.sumBy { it.trades }.toDouble() / 7),
                             "last_7_average_median" to round(average(last7Data.map { it.median })),
                             "last_7_average_average" to round(averageDouble(last7Data.map { it.average })),
                             "total_trades" to totalData.sumBy { it.trades },
@@ -228,10 +241,10 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
     }
 
     private data class CardStats(
-            var lines: Int = 0,
-            var cards: Int = 0,
-            var nameErrors: Int = 0,
-            var rowsSaved: Int = 0,
-            var rollbacks: Int = 0
+            val lines: AtomicInteger = AtomicInteger(0),
+            val cards: AtomicInteger = AtomicInteger(0),
+            val nameErrors: AtomicInteger = AtomicInteger(0),
+            val rowsSaved: AtomicInteger = AtomicInteger(0),
+            val rollbacks: AtomicInteger = AtomicInteger(0)
     )
 }
