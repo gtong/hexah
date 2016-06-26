@@ -8,7 +8,11 @@ module.exports = {
   entry: {
     main: './scripts/index',
     vendor: [
+      'babel-polyfill',
+      'highcharts',
+      'isomorphic-fetch',
       'lodash',
+      'numeral',
       'react',
       'react-dom',
       'react-router',

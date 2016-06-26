@@ -66,6 +66,7 @@ class ItemCharts extends Component {
           text: currency,
           style: {color: Highcharts.getOptions().colors[0]}
         },
+        min: 0,
         opposite: false
       }, {
         title: {
@@ -76,6 +77,7 @@ class ItemCharts extends Component {
           formatter: nChart,
           style: {color: Highcharts.getOptions().colors[1]}
         },
+        min: 0,
         opposite: true
       }],
       series: [{

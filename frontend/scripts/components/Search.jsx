@@ -21,7 +21,7 @@ class Search extends Component {
       .then(json => {
         this.setState({
           items: json,
-          lookup: keyBy(json, 'name'),
+          lookup: keyBy(json, (o) => o.name.toLowerCase()),
         });
         $('#search').search({
           source: this.state.items,
@@ -39,6 +39,7 @@ class Search extends Component {
   }
 
   selectValue(value) {
+    value = value.toLowerCase();
     if (value in this.state.lookup) {
       this.context.router.push("/i/" + this.state.lookup[value].id);
     }

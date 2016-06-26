@@ -6,7 +6,7 @@ class ItemSummary extends Component {
 
   render() {
     let summary = this.props.summary;
-    let image = `/images/${summary.key}.jpg`;
+    let image = `http://hexah-images.s3-website-us-west-1.amazonaws.com/big/${summary.key}.jpg`;
     let row = function(name, key, format, currency = false) {
       let ps = currency ? 'p' : '';
       let gs = currency ? 'g' : '';

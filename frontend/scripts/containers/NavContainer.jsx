@@ -6,7 +6,7 @@ require("./styles/nav.scss");
 class NavContainer extends Component {
   render() {
     return (
-      <div id="nav" className="ui fixed large menu">
+      <div id="nav" className="ui fixed grey inverted large menu">
         <div className="ui two column grid container">
           <a href="/" className="header two wide column item">Hexah.io</a>
           <Search/>
