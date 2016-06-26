@@ -33,6 +33,8 @@ open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemp
     val table = "auction_house_data"
     val columns = "date, name, rarity, name_key, currency, created, updated, trades, low, high, median, average"
 
+    open fun findAllNames() = jdbcTemplate.queryForList("select name from $table group by name", String::class.java)
+
     open fun add(date: Date, name: String, nameKey: String, rarity: HexObjectRarity, currency: AuctionHouseCurrency, trades: Int, low: Int, high: Int, median: Int, average: Double) {
         val now = Date()
         jdbcTemplate.update("""insert into auction_house_data

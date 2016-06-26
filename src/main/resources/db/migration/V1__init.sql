@@ -45,8 +45,7 @@ CREATE TABLE hex_objects (
   name varchar(512) not null,
   rarity int not null,
   name_key varchar(512) not null,
-  alternate_art boolean not null,
-  image_path varchar(512) not null
+  alternate_art boolean not null
 );
 CREATE INDEX name_idx ON hex_objects (name, type);
 CREATE INDEX name_key_idx ON hex_objects (name_key);

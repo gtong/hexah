@@ -25,7 +25,7 @@ open class CheckAuctionHouseFeedJob @Autowired constructor(
         if (!runJob) {
             return;
         }
-        log.info("Checking Auction House Feed")
+        log.info("Checking auction house feed")
         val url = feedUrlBase + "index.txt"
         val request = httpRequestFactory.buildGetRequest(GenericUrl(url))
         val response = request.execute()
@@ -33,25 +33,23 @@ open class CheckAuctionHouseFeedJob @Autowired constructor(
         try {
             val feeds = auctionHouseFeedDao.findAll().map { it.filename }.toSet()
             val reader = response.content.bufferedReader()
+
+            val regex = """AH-Data-\d{4}-\d{2}-\d{2}.csv""".toRegex()
             reader.forEachLine { line ->
                 stats.lines++
                 val filename = line.trim()
                 when {
                     feeds.contains(filename) -> stats.exists++
-                    line.contains("Data-Card") -> {
-                        stats.newCardFeeds++
-                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.Card)
-                    }
-                    line.contains("Data-Item") -> {
-                        stats.newItemFeeds++
-                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.Item)
+                    regex.matches(filename) -> {
+                        stats.newFeeds++
+                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.All)
                     }
                     else -> stats.ignored++
                 }
             }
         } finally {
             response.disconnect()
-            log.info("Checked Auction House Feed: $stats")
+            log.info("Checked auction house feed: $stats")
         }
     }
 
@@ -59,8 +57,7 @@ open class CheckAuctionHouseFeedJob @Autowired constructor(
             var lines: Int = 0,
             var ignored: Int = 0,
             var exists: Int = 0,
-            var newCardFeeds: Int = 0,
-            var newItemFeeds: Int = 0
+            var newFeeds: Int = 0
     )
 
 }

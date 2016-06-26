@@ -24,14 +24,13 @@ open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
                 name = rs.getString("name"),
                 rarity = HexObjectRarity.fromDB(rs.getInt("rarity")),
                 nameKey = rs.getString("name_key"),
-                alternateArt = rs.getBoolean("alternate_art"),
-                imagePath = rs.getString("image_path")
+                alternateArt = rs.getBoolean("alternate_art")
         )
     }
     val table = "hex_objects"
-    val columns = "id, created, updated, guid, set_guid, type, name, rarity, name_key, alternate_art, image_path"
+    val columns = "id, created, updated, guid, set_guid, type, name, rarity, name_key, alternate_art"
 
-    open fun add(guid: String, setGuid: String, type: HexObjectType, name: String, rarity: HexObjectRarity, nameKey: String, alternateArt: Boolean, imagePath: String): Int {
+    open fun add(guid: String, setGuid: String, type: HexObjectType, name: String, rarity: HexObjectRarity, nameKey: String, alternateArt: Boolean): Int {
         val now = Date()
         val insert = SimpleJdbcInsert(jdbcTemplate).withTableName(table).usingGeneratedKeyColumns("id")
 
@@ -44,8 +43,7 @@ open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
                 "name" to name,
                 "rarity" to rarity.db,
                 "name_key" to nameKey,
-                "alternate_art" to alternateArt,
-                "image_path" to imagePath
+                "alternate_art" to alternateArt
         ))
 
         return id.toInt()

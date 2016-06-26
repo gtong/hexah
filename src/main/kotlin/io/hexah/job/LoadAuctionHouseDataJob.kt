@@ -10,7 +10,9 @@ import io.hexah.model.AuctionHouseCurrency
 import io.hexah.model.AuctionHouseFeed
 import io.hexah.model.AuctionHouseFeedType
 import io.hexah.model.HexObjectRarity
+import io.hexah.util.averageInt
 import io.hexah.util.getNameKey
+import io.hexah.util.median
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -18,9 +20,6 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionDefinition
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
@@ -29,12 +28,12 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 open class LoadAuctionHouseDataJob @Autowired constructor(
-        val auctionHouseAggregateDao: AuctionHouseAggregateDao,
         val auctionHouseDataDao: AuctionHouseDataDao,
         val auctionHouseFeedDao: AuctionHouseFeedDao,
         val hexObjectDao: HexObjectDao,
         val httpRequestFactory: HttpRequestFactory,
         val txManager: PlatformTransactionManager,
+        val refreshAggregatesJob: RefreshAggregatesJob,
         @Value("\${jobs.loadfeed.run}") val runJob: Boolean,
         @Value("\${jobs.loadfeed.threads}") val threads: Int,
         @Value("\${hex.auction-house-feed.url}") val feedUrlBase: String
@@ -44,7 +43,6 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
     val log = LoggerFactory.getLogger(javaClass)
     val txDefinition = DefaultTransactionDefinition()
     val executor = Executors.newFixedThreadPool(threads)
-    val dateFormatter = SimpleDateFormat("yyyy-MM-dd")
 
     @Scheduled(fixedDelayString = "\${jobs.loadfeed.delay}")
     fun run() {
@@ -54,7 +52,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         val tx = txManager.getTransaction(txDefinition)
         var feed: AuctionHouseFeed? = null
         try {
-            feed = auctionHouseFeedDao.findOneToProcessByType(AuctionHouseFeedType.Card)
+            feed = auctionHouseFeedDao.findOneToProcessByType(AuctionHouseFeedType.All)
             if (feed != null) {
                 feed.inProgress = true
                 auctionHouseFeedDao.update(feed)
@@ -64,12 +62,13 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
             txManager.rollback(tx)
         }
         if (feed != null) {
-            val stats = processCardFeed(feed)
+            val stats = processFeed(feed)
             feed.numLoaded = stats.lines.get()
             feed.inProgress = false
             feed.completed = Date()
             auctionHouseFeedDao.update(feed)
         }
+        refreshAggregatesJob.run()
     }
 
     private fun getNameLookup(): Map<String, String> {
@@ -81,60 +80,63 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         return nameLookup
     }
 
-    private fun processCardFeed(feed: AuctionHouseFeed): CardStats {
-        log.info("Loading Auction House Card Data from ${feed.filename}")
-        val stats = CardStats()
-        var nameLookup = getNameLookup()
+    private fun processFeed(feed: AuctionHouseFeed): Stats {
+        log.info("Loading auction house data from ${feed.filename}")
+        val stats = Stats()
         val url = feedUrlBase + feed.filename
         val request = httpRequestFactory.buildGetRequest(GenericUrl(url))
         val response = request.execute()
+
+        var nameLookup = getNameLookup()
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd")
         val phaser = Phaser()
+
         try {
             phaser.register()
             var currentName = ""
-            var rows = ArrayList<CardRow>()
-            response.content.bufferedReader().forEachLine { line ->
+            var lines = ArrayList<FeedLine>()
+            response.content.bufferedReader().forEachLine { text ->
                 stats.lines.incrementAndGet()
-                val row = CardRow(line, dateFormatter)
-                if (!currentName.equals(row.name)) {
-                    val r = ArrayList<CardRow>(rows)
+                val line = FeedLine(text, dateFormatter)
+                if (!currentName.equals(line.name)) {
+                    val l = ArrayList<FeedLine>(lines)
                     phaser.register()
                     executor.execute {
                         try {
-                            processCardRows(stats, nameLookup, r)
+                            processLines(stats, nameLookup, l)
                         } finally {
                             phaser.arrive()
                         }
                     }
-                    rows.clear()
-                    currentName = row.name
+                    lines.clear()
+                    currentName = line.name
                 }
-                rows.add(row)
+                lines.add(line)
             }
             phaser.arriveAndAwaitAdvance()
         } finally {
             response.disconnect()
-            log.info("Loaded Auction House Card Data from ${feed.filename}: $stats")
+            log.info("Loaded auction house data from ${feed.filename}: $stats")
         }
         return stats
     }
 
-    private fun processCardRows(stats: CardStats, nameLookup: Map<String, String>, rows: List<CardRow>) {
-        if (rows.size == 0) {
+    private fun processLines(stats: Stats, nameLookup: Map<String, String>, lines: List<FeedLine>) {
+        if (lines.size == 0) {
             return
         }
-        stats.cards.incrementAndGet()
-        val ref = rows.first()
+        stats.lines.incrementAndGet()
+        val ref = lines.first()
         val name = nameLookup[ref.name.toLowerCase()]
         if (name == null) {
-            log.error("Could not find card [${ref.name}]")
+            log.error("Could not find item [${ref.name}]")
             stats.nameErrors.incrementAndGet()
             return
         }
         val tx = txManager.getTransaction(txDefinition)
         try {
             var adds = 0;
-            rows.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
+            lines.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
                 val (rarity, currency) = entry.key
                 val sorted = entry.value.map { it.price }.sorted()
                 auctionHouseDataDao.add(
@@ -147,13 +149,12 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
                         low = sorted.first(),
                         high = sorted.last(),
                         median = median(sorted),
-                        average = average(sorted)
+                        average = averageInt(sorted)
                 )
                 adds++
             }
-            calculateAggregate(name)
             txManager.commit(tx)
-            stats.rowsSaved.addAndGet(adds)
+            stats.itemsSaved.addAndGet(adds)
         } catch (t: Throwable) {
             txManager.rollback(tx)
             stats.rollbacks.incrementAndGet()
@@ -161,69 +162,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         }
     }
 
-    private fun calculateAggregate(name: String) {
-        val now = Date()
-        val data = auctionHouseDataDao.findByName(name).sortedBy { it.date }
-        val last7Date = Date(now.time - 8 * DAY_IN_MS)
-        val totalDays = (now.time - data.first().date.time) / DAY_IN_MS + 1
-        data.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
-            val (rarity, currency) = entry.key
-            val totalData = entry.value
-            val last7Data = totalData.filter { it.date.time > last7Date.time };
-            val recentData = if (totalData.size > 1) totalData.reversed().slice(0..0) else totalData
-            auctionHouseAggregateDao.save(
-                    name = name,
-                    rarity = rarity,
-                    nameKey = getNameKey(name, rarity),
-                    currency = currency,
-                    stats = mapOf(
-                            "recent_trades" to recentData.sumBy { it.trades },
-                            "recent_median" to recentData.sumBy { it.median },
-                            "recent_average" to round(recentData.sumByDouble { it.average }),
-                            "last_7_trades" to last7Data.sumBy { it.trades },
-                            "last_7_trades_per_day" to round(last7Data.sumBy { it.trades }.toDouble() / 7),
-                            "last_7_average_median" to round(average(last7Data.map { it.median })),
-                            "last_7_average_average" to round(averageDouble(last7Data.map { it.average })),
-                            "total_trades" to totalData.sumBy { it.trades },
-                            "total_trades_per_day" to round(totalData.sumBy { it.trades }.toDouble() / totalDays),
-                            "total_average_median" to round(average(totalData.map { it.median })),
-                            "total_average_average" to round(averageDouble(totalData.map { it.average }))
-                    )
-            )
-        }
-    }
-
-    private fun round(value: Double): BigDecimal {
-        val format = DecimalFormat("#.0000")
-        format.roundingMode = RoundingMode.HALF_UP
-        return BigDecimal(format.format(value))
-    }
-
-    private fun median(sorted: List<Int>): Int {
-        if (sorted.size % 2 == 0) {
-            val mid = sorted.size / 2 - 1
-            return Math.round((sorted[mid] + sorted[mid + 1]) / 2.0).toInt()
-        } else {
-            return sorted[sorted.size / 2]
-        }
-    }
-
-    private fun average(values: List<Int>): Double {
-        if (values.size == 0) {
-            return 0.0
-        }
-        return values.sum().toDouble() / values.size
-    }
-
-    private fun averageDouble(values: List<Double>): Double {
-        if (values.size == 0) {
-            return 0.0
-        }
-        return values.sum() / values.size
-    }
-
-
-    private class CardRow {
+    private class FeedLine {
         val name: String
         val rarity: HexObjectRarity
         val currency: AuctionHouseCurrency
@@ -240,11 +179,11 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         }
     }
 
-    private data class CardStats(
+    private data class Stats(
             val lines: AtomicInteger = AtomicInteger(0),
-            val cards: AtomicInteger = AtomicInteger(0),
+            val items: AtomicInteger = AtomicInteger(0),
             val nameErrors: AtomicInteger = AtomicInteger(0),
-            val rowsSaved: AtomicInteger = AtomicInteger(0),
+            val itemsSaved: AtomicInteger = AtomicInteger(0),
             val rollbacks: AtomicInteger = AtomicInteger(0)
     )
 }

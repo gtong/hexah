@@ -3,7 +3,7 @@ package io.hexah.model
 import java.util.*
 
 enum class AuctionHouseFeedType(val db: Char) {
-    Card('c'), Item('i');
+    All('a');
 
     companion object {
         fun fromDB(db: Char): AuctionHouseFeedType {

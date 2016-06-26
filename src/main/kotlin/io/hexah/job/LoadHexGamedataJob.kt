@@ -50,6 +50,10 @@ open class LoadHexGamedataJob @Autowired constructor(
                 stats.objects++
                 if (content.contains("Reckoning.Game.CardTemplate")) {
                     addCard(stats, content, existing)
+                } else if (content.contains("Reckoning.Game.InventoryEquipmentData")) {
+                    addEquipment(stats, content, existing)
+                } else if (content.contains("Reckoning.Game.InventoryCardPack")) {
+                    addPack(stats, content, existing)
                 }
             })
         } finally {
@@ -60,23 +64,64 @@ open class LoadHexGamedataJob @Autowired constructor(
 
     private fun addCard(stats: Stats, content: String, existing: Set<String>) {
         try {
-            stats.cards++
+            stats.cards.found++
             val json = parser.parse(cleanup(content)).asJsonObject;
             val guid = json.getAsJsonObject("m_Id").get("m_Guid").asString
             val setGuid = json.getAsJsonObject("m_SetId").get("m_Guid").asString
             if (existing.contains(guid)) {
-                stats.cardsExisting++
+                stats.cards.existing++
                 return
             }
             val name = json.get("m_Name").asString
             val rarity = HexObjectRarity.valueOf(json.get("m_CardRarity").asString)
             val nameKey = getNameKey(name, rarity)
             val alternateArt = json.get("m_HasAlternateArt").asInt == 1
-            val imagePath = json.get("m_CardImagePath").asString.replace("""\\""", """\""")
-            hexObjectDao.add(guid, setGuid, HexObjectType.Card, name, rarity, nameKey, alternateArt, imagePath)
-            stats.cardsAdded++
+            hexObjectDao.add(guid, setGuid, HexObjectType.Card, name, rarity, nameKey, alternateArt)
+            stats.cards.added++
         } catch (e: Throwable) {
             log.error("Error adding card [$content]", e)
+            throw e
+        }
+    }
+
+    private fun addEquipment(stats: Stats, content: String, existing: Set<String>) {
+        try {
+            stats.equipment.found++
+            val json = parser.parse(cleanup(content)).asJsonObject;
+            val guid = json.getAsJsonObject("m_Id").get("m_Guid").asString
+            val setGuid = json.getAsJsonObject("m_EquipmentSet").get("m_Guid").asString
+            if (existing.contains(guid)) {
+                stats.equipment.existing++
+                return
+            }
+            val name = json.get("m_Name").asString
+            val rarity = HexObjectRarity.valueOf(json.get("m_Rarity").asString)
+            val nameKey = getNameKey(name, rarity)
+            hexObjectDao.add(guid, setGuid, HexObjectType.Equipment, name, rarity, nameKey, false)
+            stats.equipment.added++
+        } catch (e: Throwable) {
+            log.error("Error adding equipment [$content]", e)
+            throw e
+        }
+    }
+
+    private fun addPack(stats: Stats, content: String, existing: Set<String>) {
+        try {
+            stats.packs.found++
+            val json = parser.parse(cleanup(content)).asJsonObject;
+            val guid = json.getAsJsonObject("m_Id").get("m_Guid").asString
+            val setGuid = json.getAsJsonObject("m_SetId").get("m_Guid").asString
+            if (existing.contains(guid)) {
+                stats.packs.existing++
+                return
+            }
+            val name = json.get("m_Name").asString
+            val rarity = HexObjectRarity.Common
+            val nameKey = getNameKey(name, rarity)
+            hexObjectDao.add(guid, setGuid, HexObjectType.Pack, name, rarity, nameKey, false)
+            stats.packs.added++
+        } catch (e: Throwable) {
+            log.error("Error adding pack [$content]", e)
             throw e
         }
     }
@@ -110,9 +155,15 @@ open class LoadHexGamedataJob @Autowired constructor(
 
     private data class Stats(
             var objects: Int = 0,
-            var cards: Int = 0,
-            var cardsExisting: Int = 0,
-            var cardsAdded: Int = 0
+            val cards: ItemStats = ItemStats(),
+            val equipment: ItemStats = ItemStats(),
+            val packs: ItemStats = ItemStats()
+    )
+
+    private data class ItemStats(
+            var found: Int = 0,
+            var existing: Int = 0,
+            var added: Int = 0
     )
 
 }
