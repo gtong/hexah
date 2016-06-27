@@ -97,21 +97,25 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
             var lines = ArrayList<FeedLine>()
             response.content.bufferedReader().forEachLine { text ->
                 stats.lines.incrementAndGet()
-                val line = FeedLine(text, dateFormatter)
-                if (!currentName.equals(line.name)) {
-                    val l = ArrayList<FeedLine>(lines)
-                    phaser.register()
-                    executor.execute {
-                        try {
-                            processLines(stats, nameLookup, l)
-                        } finally {
-                            phaser.arrive()
+                try {
+                    val line = FeedLine(text, dateFormatter)
+                    if (!currentName.equals(line.name)) {
+                        val l = ArrayList<FeedLine>(lines)
+                        phaser.register()
+                        executor.execute {
+                            try {
+                                processLines(stats, nameLookup, l)
+                            } finally {
+                                phaser.arrive()
+                            }
                         }
+                        lines.clear()
+                        currentName = line.name
                     }
-                    lines.clear()
-                    currentName = line.name
+                    lines.add(line)
+                } catch (t: Throwable) {
+                    log.error("Error processing [$text]", t);
                 }
-                lines.add(line)
             }
             phaser.arriveAndAwaitAdvance()
         } finally {

@@ -13,7 +13,7 @@ enum class HexObjectType(val db: Char) {
 }
 
 enum class HexObjectRarity(val db: Int) {
-    Promo(-2), Land(-1), Common(2), Uncommon(3), Rare(4), Epic(5), Legendary(6);
+    Promo(-2), Land(-1), Unknown(0), Common(2), Uncommon(3), Rare(4), Epic(5), Legendary(6);
 
     companion object {
         fun fromDB(db: Int): HexObjectRarity {
