@@ -63,6 +63,8 @@ bootRun {
     addResources = true
 }
 
+task stage(dependsOn: ['clean', 'build'])
+
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
 }
