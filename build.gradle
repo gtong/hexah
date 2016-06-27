@@ -63,7 +63,18 @@ bootRun {
     addResources = true
 }
 
-task stage(dependsOn: ['clean', 'build'])
+task stage(type: Copy, dependsOn: [clean, build]) {
+    from jar.archivePath
+    into project.rootDir
+    rename {
+        'hexah.jar'
+    }
+}
+stage.mustRunAfter(clean)
+
+clean << {
+    project.file('hexah.jar').delete()
+}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
