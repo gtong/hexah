@@ -30,7 +30,7 @@ open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
     val table = "hex_objects"
     val columns = "id, created, updated, guid, set_guid, type, name, rarity, name_key, alternate_art"
 
-    open fun add(guid: String, setGuid: String, type: HexObjectType, name: String, rarity: HexObjectRarity, nameKey: String, alternateArt: Boolean): Int {
+    open fun add(guid: String, setGuid: String?, type: HexObjectType, name: String, rarity: HexObjectRarity, nameKey: String, alternateArt: Boolean): Int {
         val now = Date()
         val insert = SimpleJdbcInsert(jdbcTemplate).withTableName(table).usingGeneratedKeyColumns("id")
 

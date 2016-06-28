@@ -134,7 +134,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         val ref = lines.first()
         val name = nameLookup[ref.name.trim().toLowerCase()]
         if (name == null) {
-            log.error("Could not find item [${ref.name.trim().toLowerCase()}]")
+            log.error("Could not find item [${ref.name}]")
             stats.nameErrors.incrementAndGet()
             return
         }

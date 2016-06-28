@@ -49,13 +49,58 @@ open class LoadHexGamedataJob @Autowired constructor(
             read(reader, fun(content: String) {
                 stats.objects++
                 if (content.contains("Reckoning.Game.CardTemplate")) {
-                    addCard(stats, content, existing)
+                    addItem(
+                            stats = stats.cards,
+                            content = content,
+                            existing = existing,
+                            type = HexObjectType.Card,
+                            setKey = "m_SetId",
+                            rarityKey = "m_CardRarity",
+                            alternateArtKey = "m_HasAlternateArt"
+                    )
                 } else if (content.contains("Reckoning.Game.InventoryEquipmentData")) {
-                    addEquipment(stats, content, existing)
+                    addItem(
+                            stats = stats.equipment,
+                            content = content,
+                            existing = existing,
+                            type = HexObjectType.Equipment,
+                            setKey = "m_EquipmentSet",
+                            rarityKey = "m_Rarity"
+                    )
                 } else if (content.contains("Reckoning.Game.InventoryCardPack")) {
-                    addPack(stats, content, existing)
+                    addItem(
+                            stats = stats.packs,
+                            content = content,
+                            existing = existing,
+                            type = HexObjectType.Pack,
+                            setKey = "m_SetId"
+                    )
                 } else if (content.contains("Reckoning.Game.InventoryMercenaryData")) {
-                    addMercenary(stats, content, existing)
+                    addItem(
+                            stats = stats.mercenaries,
+                            content = content,
+                            existing = existing,
+                            type = HexObjectType.Mercenary,
+                            setKey = "m_MercenarySet",
+                            rarityKey = "m_Rarity"
+                    )
+                } else if (content.contains("Reckoning.Game.InventoryStardust")) {
+                    addItem(
+                            stats = stats.stardust,
+                            content = content,
+                            existing = existing,
+                            type = HexObjectType.Stardust,
+                            rarityKey = "m_Rarity"
+                    )
+                } else if (content.contains("Reckoning.Game.InventoryTreasureChest")) {
+                    addItem(
+                            stats = stats.treasureChests,
+                            content = content,
+                            existing = existing,
+                            type = HexObjectType.TreasureChest,
+                            setKey = "m_SetId",
+                            rarityKey = "m_TreasureChestType"
+                    )
                 }
             })
         } finally {
@@ -64,50 +109,8 @@ open class LoadHexGamedataJob @Autowired constructor(
         return stats
     }
 
-    private fun addCard(stats: Stats, content: String, existing: Set<String>) {
-        addItem(
-                stats = stats.cards,
-                content = content,
-                existing = existing,
-                type = HexObjectType.Card,
-                rarityKey = "m_CardRarity",
-                alternateArtKey = "m_HasAlternateArt"
-        )
-    }
-
-    private fun addEquipment(stats: Stats, content: String, existing: Set<String>) {
-        addItem(
-                stats = stats.equipment,
-                content = content,
-                existing = existing,
-                type = HexObjectType.Equipment,
-                setKey = "m_EquipmentSet",
-                rarityKey = "m_Rarity"
-        )
-    }
-
-    private fun addPack(stats: Stats, content: String, existing: Set<String>) {
-        addItem(
-                stats = stats.packs,
-                content = content,
-                existing = existing,
-                type = HexObjectType.Pack
-        )
-    }
-
-    private fun addMercenary(stats: Stats, content: String, existing: Set<String>) {
-        addItem(
-                stats = stats.mercenaries,
-                content = content,
-                existing = existing,
-                type = HexObjectType.Mercenary,
-                setKey = "m_MercenarySet",
-                rarityKey = "m_Rarity"
-        )
-    }
-
     private fun addItem(stats: ItemStats, content: String, existing: Set<String>, type: HexObjectType,
-                        setKey: String = "m_SetId", rarityKey: String? = null, alternateArtKey: String? = null) {
+                        setKey: String? = null, rarityKey: String? = null, alternateArtKey: String? = null) {
         try {
             stats.found++
             val json = parser.parse(cleanup(content)).asJsonObject;
@@ -116,7 +119,7 @@ open class LoadHexGamedataJob @Autowired constructor(
                 stats.existing++
                 return
             }
-            val setGuid = json.getAsJsonObject(setKey).get("m_Guid").asString
+            val setGuid = if (setKey == null) null else json.getAsJsonObject(setKey).get("m_Guid").asString
             val name = json.get("m_Name").asString.trim()
             val rarity = if (rarityKey == null) HexObjectRarity.Unknown else HexObjectRarity.valueOf(json.get(rarityKey).asString)
             val nameKey = getNameKey(name, rarity)
@@ -161,7 +164,9 @@ open class LoadHexGamedataJob @Autowired constructor(
             val cards: ItemStats = ItemStats(),
             val equipment: ItemStats = ItemStats(),
             val packs: ItemStats = ItemStats(),
-            val mercenaries: ItemStats = ItemStats()
+            val mercenaries: ItemStats = ItemStats(),
+            val stardust: ItemStats = ItemStats(),
+            val treasureChests: ItemStats = ItemStats()
     )
 
     private data class ItemStats(

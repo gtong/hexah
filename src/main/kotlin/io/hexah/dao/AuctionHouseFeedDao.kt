@@ -47,7 +47,7 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
 
     open fun findOneToProcessByType(type: AuctionHouseFeedType): AuctionHouseFeed? {
         return jdbcTemplate.query(
-                "select $columns from $table where type = ? and in_progress = false and completed is null order by created limit 1 for update",
+                "select $columns from $table where type = ? and in_progress = false and completed is null order by created desc limit 1 for update",
                 mapper, type.db).elementAtOrNull(0);
     }
 }

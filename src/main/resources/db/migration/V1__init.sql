@@ -40,7 +40,7 @@ CREATE TABLE hex_objects (
   created timestamp with time zone not null,
   updated timestamp with time zone not null,
   guid uuid unique not null,
-  set_guid uuid not null,
+  set_guid uuid,
   type char not null,
   name varchar(512) not null,
   rarity int not null,
