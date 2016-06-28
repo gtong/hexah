@@ -50,13 +50,13 @@ class ItemCharts extends Component {
 
   createChart(id, currency, suffix, medians, ranges, trades) {
     return new Highcharts['stockChart'](id, {
-      rangeSelector: {
-        selected: 1
+      rangeSelector: { // Default 1m zoom
+        selected: 0
       },
       tooltip: {
         shared: true
       },
-      yAxis: [{ // Primary yAxis
+      yAxis: [{ // Currency axis
         labels: {
           format: `{value}${suffix}`,
           formatter: nChart,
@@ -67,9 +67,9 @@ class ItemCharts extends Component {
           style: {color: Highcharts.getOptions().colors[0]}
         },
         min: 0,
-        opposite: false
+        opposite: false // StockChart opposite is reversed
       }, {
-        title: {
+        title: { // Trades axis
           text: 'Trades',
           style: {color: Highcharts.getOptions().colors[1]}
         },
