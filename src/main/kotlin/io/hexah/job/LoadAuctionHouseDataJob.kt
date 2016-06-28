@@ -76,6 +76,8 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
                 hexObjectDao.findAll().map { it.name }.associate { Pair(it.replace(",", "").toLowerCase(), it) }
         )
         nameLookup.put("murder", "Kill")
+        nameLookup.put("rotting gloves", "Rotting Boots")
+        nameLookup.put("ashahsa windborne acolyte", "Ashahsa")
         return nameLookup
     }
 
@@ -130,9 +132,9 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         }
         stats.lines.incrementAndGet()
         val ref = lines.first()
-        val name = nameLookup[ref.name.toLowerCase()]
+        val name = nameLookup[ref.name.trim().toLowerCase()]
         if (name == null) {
-            log.error("Could not find item [${ref.name}]")
+            log.error("Could not find item [${ref.name.trim().toLowerCase()}]")
             stats.nameErrors.incrementAndGet()
             return
         }
