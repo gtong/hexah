@@ -3,7 +3,7 @@ package io.hexah.model
 import java.util.*
 
 enum class HexObjectType(val db: Char) {
-    Card('c'), Equipment('e'), Pack('p');
+    Card('c'), Equipment('e'), Pack('p'), Mercenary('m');
 
     companion object {
         fun fromDB(db: Char): HexObjectType {

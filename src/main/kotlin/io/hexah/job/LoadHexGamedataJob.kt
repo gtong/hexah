@@ -54,6 +54,8 @@ open class LoadHexGamedataJob @Autowired constructor(
                     addEquipment(stats, content, existing)
                 } else if (content.contains("Reckoning.Game.InventoryCardPack")) {
                     addPack(stats, content, existing)
+                } else if (content.contains("Reckoning.Game.InventoryMercenaryData")) {
+                    addMercenary(stats, content, existing)
                 }
             })
         } finally {
@@ -63,65 +65,66 @@ open class LoadHexGamedataJob @Autowired constructor(
     }
 
     private fun addCard(stats: Stats, content: String, existing: Set<String>) {
-        try {
-            stats.cards.found++
-            val json = parser.parse(cleanup(content)).asJsonObject;
-            val guid = json.getAsJsonObject("m_Id").get("m_Guid").asString
-            val setGuid = json.getAsJsonObject("m_SetId").get("m_Guid").asString
-            if (existing.contains(guid)) {
-                stats.cards.existing++
-                return
-            }
-            val name = json.get("m_Name").asString
-            val rarity = HexObjectRarity.valueOf(json.get("m_CardRarity").asString)
-            val nameKey = getNameKey(name, rarity)
-            val alternateArt = json.get("m_HasAlternateArt").asInt == 1
-            hexObjectDao.add(guid, setGuid, HexObjectType.Card, name, rarity, nameKey, alternateArt)
-            stats.cards.added++
-        } catch (e: Throwable) {
-            log.error("Error adding card [$content]", e)
-            throw e
-        }
+        addItem(
+                stats = stats.cards,
+                content = content,
+                existing = existing,
+                type = HexObjectType.Card,
+                rarityKey = "m_CardRarity",
+                alternateArtKey = "m_HasAlternateArt"
+        )
     }
 
     private fun addEquipment(stats: Stats, content: String, existing: Set<String>) {
-        try {
-            stats.equipment.found++
-            val json = parser.parse(cleanup(content)).asJsonObject;
-            val guid = json.getAsJsonObject("m_Id").get("m_Guid").asString
-            val setGuid = json.getAsJsonObject("m_EquipmentSet").get("m_Guid").asString
-            if (existing.contains(guid)) {
-                stats.equipment.existing++
-                return
-            }
-            val name = json.get("m_Name").asString
-            val rarity = HexObjectRarity.valueOf(json.get("m_Rarity").asString)
-            val nameKey = getNameKey(name, rarity)
-            hexObjectDao.add(guid, setGuid, HexObjectType.Equipment, name, rarity, nameKey, false)
-            stats.equipment.added++
-        } catch (e: Throwable) {
-            log.error("Error adding equipment [$content]", e)
-            throw e
-        }
+        addItem(
+                stats = stats.equipment,
+                content = content,
+                existing = existing,
+                type = HexObjectType.Equipment,
+                setKey = "m_EquipmentSet",
+                rarityKey = "m_Rarity"
+        )
     }
 
     private fun addPack(stats: Stats, content: String, existing: Set<String>) {
+        addItem(
+                stats = stats.packs,
+                content = content,
+                existing = existing,
+                type = HexObjectType.Pack
+        )
+    }
+
+    private fun addMercenary(stats: Stats, content: String, existing: Set<String>) {
+        addItem(
+                stats = stats.mercenaries,
+                content = content,
+                existing = existing,
+                type = HexObjectType.Mercenary,
+                setKey = "m_MercenarySet",
+                rarityKey = "m_Rarity"
+        )
+    }
+
+    private fun addItem(stats: ItemStats, content: String, existing: Set<String>, type: HexObjectType,
+                        setKey: String = "m_SetId", rarityKey: String? = null, alternateArtKey: String? = null) {
         try {
-            stats.packs.found++
+            stats.found++
             val json = parser.parse(cleanup(content)).asJsonObject;
             val guid = json.getAsJsonObject("m_Id").get("m_Guid").asString
-            val setGuid = json.getAsJsonObject("m_SetId").get("m_Guid").asString
             if (existing.contains(guid)) {
-                stats.packs.existing++
+                stats.existing++
                 return
             }
-            val name = json.get("m_Name").asString
-            val rarity = HexObjectRarity.Common
+            val setGuid = json.getAsJsonObject(setKey).get("m_Guid").asString
+            val name = json.get("m_Name").asString.trim()
+            val rarity = if (rarityKey == null) HexObjectRarity.Unknown else HexObjectRarity.valueOf(json.get(rarityKey).asString)
             val nameKey = getNameKey(name, rarity)
-            hexObjectDao.add(guid, setGuid, HexObjectType.Pack, name, rarity, nameKey, false)
-            stats.packs.added++
+            val alternateArt = if (alternateArtKey == null) false else json.get(alternateArtKey).asInt == 1
+            hexObjectDao.add(guid, setGuid, type, name, rarity, nameKey, alternateArt)
+            stats.added++
         } catch (e: Throwable) {
-            log.error("Error adding pack [$content]", e)
+            log.error("Error adding $type [$content]", e)
             throw e
         }
     }
@@ -157,7 +160,8 @@ open class LoadHexGamedataJob @Autowired constructor(
             var objects: Int = 0,
             val cards: ItemStats = ItemStats(),
             val equipment: ItemStats = ItemStats(),
-            val packs: ItemStats = ItemStats()
+            val packs: ItemStats = ItemStats(),
+            val mercenaries: ItemStats = ItemStats()
     )
 
     private data class ItemStats(

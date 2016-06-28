@@ -2,7 +2,6 @@ package io.hexah.job
 
 import com.google.api.client.http.GenericUrl
 import com.google.api.client.http.HttpRequestFactory
-import io.hexah.dao.AuctionHouseAggregateDao
 import io.hexah.dao.AuctionHouseDataDao
 import io.hexah.dao.AuctionHouseFeedDao
 import io.hexah.dao.HexObjectDao
