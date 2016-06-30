@@ -23,7 +23,7 @@ class NavSearch extends Component {
           items: json,
           lookup: keyBy(json, (o) => o.name.toLowerCase()),
         });
-        $('#search').search({
+        $('#nav-search').search({
           source: this.state.items,
           fields: {title: 'name'},
           searchFields: ['name'],
@@ -53,7 +53,7 @@ class NavSearch extends Component {
 
   render() {
     return (
-      <div id="search" className="ui search item twelve wide column">
+      <div id="nav-search" className="ui search item">
         <div className="ui icon input">
           <input
             className="prompt" type="text" placeholder="Search..."

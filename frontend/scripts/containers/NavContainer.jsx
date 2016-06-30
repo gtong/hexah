@@ -7,10 +7,10 @@ require("./styles/nav.scss");
 class NavContainer extends Component {
   render() {
     return (
-      <div id="nav" className="ui fixed grey inverted menu">
-        <div className="ui grid container">
-          <a href="/" className="header two wide column item">Hexah.io</a>
-          <NavSearch/>
+      <div id="nav" className="ui fixed inverted grey menu">
+        <a href="/" className="header item">Hexah.io</a>
+        <NavSearch/>
+        <div className="right menu">
           <NavLogin/>
         </div>
       </div>

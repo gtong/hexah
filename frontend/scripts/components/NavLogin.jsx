@@ -15,7 +15,7 @@ class NavLogin extends Component {
 
   render() {
     return (
-      <a className="ui item two wide column" onClick={this.login}>Sign In</a>
+      <a className="ui item" onClick={this.login}>Sign In</a>
     );
   }
 }
