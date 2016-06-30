@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import fetch from 'isomorphic-fetch';
-import {n, f} from '../util/format';
+import {n, f} from '../utils/format';
 
 class ItemSummary extends Component {
 

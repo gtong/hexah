@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import map from 'lodash/map';
 import fetch from 'isomorphic-fetch';
-import {n} from '../util/format';
+import {n} from '../utils/format';
 
 let Highcharts = require('highcharts/highstock');
 require('highcharts/highcharts-more')(Highcharts);

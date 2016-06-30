@@ -22,7 +22,11 @@ module.exports = {
   module: {
     loaders: [
       { test: /\.jsx?$/, loaders: ['react-hot', 'babel?' + JSON.stringify({presets: ['react', 'es2015']})], include: scriptsDir },
-      { test: /\.scss$/, loaders: ['style', 'css', 'sass'] }
+      { test: /\.scss$/, loaders: ['style', 'css', 'sass'] },
+      // Needed by Auth0
+      { test: /node_modules[\\\/]auth0-lock[\\\/].*\.js$/, loaders: ['transform-loader/cacheable?brfs', 'transform-loader/cacheable?packageify'] },
+      { test: /node_modules[\\\/]auth0-lock[\\\/].*\.ejs$/, loader: 'transform-loader/cacheable?ejsify'},
+      { test: /\.json$/, loader: 'json-loader' }
     ]
   },
   devServer: {

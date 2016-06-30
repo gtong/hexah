@@ -1,15 +1,17 @@
 import React, {Component} from 'react';
-import Search from "../components/Search";
+import NavSearch from "../components/NavSearch";
+import NavLogin from "../components/NavLogin";
 
 require("./styles/nav.scss");
 
 class NavContainer extends Component {
   render() {
     return (
-      <div id="nav" className="ui fixed grey inverted large menu">
-        <div className="ui two column grid container">
+      <div id="nav" className="ui fixed grey inverted menu">
+        <div className="ui grid container">
           <a href="/" className="header two wide column item">Hexah.io</a>
-          <Search/>
+          <NavSearch/>
+          <NavLogin/>
         </div>
       </div>
     );

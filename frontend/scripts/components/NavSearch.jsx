@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import keyBy from 'lodash/keyBy';
 import fetch from 'isomorphic-fetch';
 
-class Search extends Component {
+class NavSearch extends Component {
   constructor(props) {
     super(props);
     this.loadSearch = this.loadSearch.bind(this);
@@ -53,7 +53,7 @@ class Search extends Component {
 
   render() {
     return (
-      <div id="search" className="ui search item fourteen wide column">
+      <div id="search" className="ui search item twelve wide column">
         <div className="ui icon input">
           <input
             className="prompt" type="text" placeholder="Search..."
@@ -68,8 +68,8 @@ class Search extends Component {
   
 }
 
-Search.contextTypes = {
+NavSearch.contextTypes = {
   router: React.PropTypes.object.isRequired
 };
 
-export default Search;
+export default NavSearch;
