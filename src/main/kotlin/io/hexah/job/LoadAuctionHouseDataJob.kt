@@ -78,6 +78,8 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
         nameLookup.put("murder", "Kill")
         nameLookup.put("rotting gloves", "Rotting Boots")
         nameLookup.put("ashahsa windborne acolyte", "Ashahsa")
+        nameLookup.put("rakashani the spiteblade", "Rakshani The Spiteblade")
+        nameLookup.put("brosi buk", "Brosi-Buk")
         return nameLookup
     }
 

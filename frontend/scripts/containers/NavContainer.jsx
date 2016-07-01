@@ -10,9 +10,6 @@ class NavContainer extends Component {
       <div id="nav" className="ui fixed inverted grey menu">
         <a href="/" className="header item">Hexah.io</a>
         <NavSearch/>
-        <div className="right menu">
-          <NavLogin/>
-        </div>
       </div>
     );
   }
