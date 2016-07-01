@@ -27,21 +27,21 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 open class LoadAuctionHouseDataJob @Autowired constructor(
-        val auctionHouseDataDao: AuctionHouseDataDao,
-        val auctionHouseFeedDao: AuctionHouseFeedDao,
-        val hexObjectDao: HexObjectDao,
-        val httpRequestFactory: HttpRequestFactory,
-        val txManager: PlatformTransactionManager,
-        val refreshAggregatesJob: RefreshAggregatesJob,
-        @Value("\${jobs.loadfeed.run}") val runJob: Boolean,
-        @Value("\${jobs.loadfeed.threads}") val threads: Int,
-        @Value("\${hex.auction-house-feed.url}") val feedUrlBase: String
+        private val auctionHouseDataDao: AuctionHouseDataDao,
+        private val auctionHouseFeedDao: AuctionHouseFeedDao,
+        private val hexObjectDao: HexObjectDao,
+        private val httpRequestFactory: HttpRequestFactory,
+        private val txManager: PlatformTransactionManager,
+        private val refreshAggregatesJob: RefreshAggregatesJob,
+        @Value("\${jobs.loadfeed.run}") private val runJob: Boolean,
+        @Value("\${jobs.loadfeed.threads}") private val threads: Int,
+        @Value("\${hex.auction-house-feed.url}") private val feedUrlBase: String
 ) {
-    val DAY_IN_MS = 1000 * 60 * 60 * 24
+    private val DAY_IN_MS = 1000 * 60 * 60 * 24
 
-    val log = LoggerFactory.getLogger(javaClass)
-    val txDefinition = DefaultTransactionDefinition()
-    val executor = Executors.newFixedThreadPool(threads)
+    private val log = LoggerFactory.getLogger(javaClass)
+    private val txDefinition = DefaultTransactionDefinition()
+    private val executor = Executors.newFixedThreadPool(threads)
 
     @Scheduled(fixedDelayString = "\${jobs.loadfeed.delay}")
     fun run() {

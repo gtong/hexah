@@ -10,11 +10,11 @@ import java.math.BigDecimal
 import java.util.*
 
 @Repository
-open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
+open class AuctionHouseDataDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate) {
 
-    val gmt = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    private val gmt = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 
-    val mapper = RowMapper { rs, rowNum ->
+    private val mapper = RowMapper { rs, rowNum ->
         AuctionHouseData(
                 date = rs.getDate("date", gmt),
                 name = rs.getString("name"),
@@ -30,8 +30,8 @@ open class AuctionHouseDataDao @Autowired constructor(val jdbcTemplate: JdbcTemp
                 average = rs.getDouble("average")
         )
     }
-    val table = "auction_house_data"
-    val columns = "date, name, rarity, name_key, currency, created, updated, trades, low, high, median, average"
+    private val table = "auction_house_data"
+    private val columns = "date, name, rarity, name_key, currency, created, updated, trades, low, high, median, average"
 
     open fun findAllNames() = jdbcTemplate.queryForList("select name from $table group by name", String::class.java)
 

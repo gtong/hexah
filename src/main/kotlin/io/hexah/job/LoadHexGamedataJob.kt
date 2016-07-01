@@ -18,14 +18,14 @@ import javax.annotation.PostConstruct
 @Component
 @DependsOn("flywayInitializer")
 open class LoadHexGamedataJob @Autowired constructor(
-        val hexObjectDao: HexObjectDao,
-        @Value("\${jobs.gamedata.run}") val runJob: Boolean
+        private val hexObjectDao: HexObjectDao,
+        @Value("\${jobs.gamedata.run}") private val runJob: Boolean
 ) {
 
-    val FILENAME = "data/gamedata.gz"
+    private val FILENAME = "data/gamedata.gz"
 
-    val log = LoggerFactory.getLogger(javaClass)
-    val parser = JsonParser()
+    private val log = LoggerFactory.getLogger(javaClass)
+    private val parser = JsonParser()
 
     @PostConstruct
     fun init() {

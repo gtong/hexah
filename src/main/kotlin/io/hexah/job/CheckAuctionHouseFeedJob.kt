@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component
 
 @Component
 open class CheckAuctionHouseFeedJob @Autowired constructor(
-        val httpRequestFactory: HttpRequestFactory,
-        val auctionHouseFeedDao: AuctionHouseFeedDao,
-        @Value("\${jobs.checkfeed.run}") val runJob: Boolean,
-        @Value("\${hex.auction-house-feed.url}") val feedUrlBase: String
+        private val httpRequestFactory: HttpRequestFactory,
+        private val auctionHouseFeedDao: AuctionHouseFeedDao,
+        @Value("\${jobs.checkfeed.run}") private val runJob: Boolean,
+        @Value("\${hex.auction-house-feed.url}") private val feedUrlBase: String
 ) {
 
-    val log = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     fun run() {

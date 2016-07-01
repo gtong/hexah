@@ -13,12 +13,12 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-open class AuctionHouseAggregateDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
+open class AuctionHouseAggregateDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate) {
 
-    val parser = JsonParser()
-    val gson = Gson()
+    private val parser = JsonParser()
+    private val gson = Gson()
 
-    val mapper = RowMapper { rs, rowNum ->
+    private val mapper = RowMapper { rs, rowNum ->
         AuctionHouseAggregate(
                 name = rs.getString("name"),
                 rarity = HexObjectRarity.fromDB(rs.getInt("rarity")),
@@ -29,11 +29,11 @@ open class AuctionHouseAggregateDao @Autowired constructor(val jdbcTemplate: Jdb
                 stats = fromJson(rs.getString("stats"))
         )
     }
-    val nameMapper = RowMapper { rs, i ->
+    private val nameMapper = RowMapper { rs, i ->
         Triple(rs.getString("name"), HexObjectRarity.fromDB(rs.getInt("rarity")), rs.getString("name_key"))
     }
-    val table = "auction_house_aggregates"
-    val columns = "name, rarity, name_key, currency, created, updated, stats"
+    private val table = "auction_house_aggregates"
+    private val columns = "name, rarity, name_key, currency, created, updated, stats"
 
     open fun findNames()
             = jdbcTemplate.query("select name, rarity, name_key from $table group by name, rarity, name_key", nameMapper);

@@ -9,9 +9,9 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
+open class AuctionHouseFeedDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate) {
 
-    val mapper = RowMapper { rs, rowNum ->
+    private val mapper = RowMapper { rs, rowNum ->
         AuctionHouseFeed(
                 filename = rs.getString("filename"),
                 created = rs.getTimestamp("created"),
@@ -22,8 +22,8 @@ open class AuctionHouseFeedDao @Autowired constructor(val jdbcTemplate: JdbcTemp
                 completed = rs.getTimestamp("completed")
         )
     }
-    val table = "auction_house_feeds"
-    val columns = "filename, created, updated, type, in_progress, num_loaded, completed"
+    private val table = "auction_house_feeds"
+    private val columns = "filename, created, updated, type, in_progress, num_loaded, completed"
 
     open fun add(filename: String, type: AuctionHouseFeedType) {
         val now = Date()

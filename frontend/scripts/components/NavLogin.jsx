@@ -5,12 +5,19 @@ class NavLogin extends Component {
   constructor(props) {
     super(props);
     this.login = this.login.bind(this);
+    this.loginCallback = this.loginCallback.bind(this);
     this.state = {
     };
   }
 
   login() {
-    auth.login();
+    auth.login(this.loginCallback);
+  }
+
+  loginCallback(err, profile, token) {
+    console.log(err);
+    console.log(profile);
+    console.log(token);
   }
 
   render() {

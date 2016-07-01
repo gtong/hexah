@@ -13,12 +13,12 @@ import java.util.*
 
 @Component
 open class RefreshAggregatesJob @Autowired constructor(
-        val auctionHouseAggregateDao: AuctionHouseAggregateDao,
-        val auctionHouseDataDao: AuctionHouseDataDao
+        private val auctionHouseAggregateDao: AuctionHouseAggregateDao,
+        private val auctionHouseDataDao: AuctionHouseDataDao
 ) {
-    val DAY_IN_MS = 1000 * 60 * 60 * 24
+    private val DAY_IN_MS = 1000 * 60 * 60 * 24
 
-    val log = LoggerFactory.getLogger(javaClass)
+    private val log = LoggerFactory.getLogger(javaClass)
 
     fun run() {
         log.info("Refreshing auction house aggregates")

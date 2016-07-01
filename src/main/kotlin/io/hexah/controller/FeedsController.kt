@@ -14,10 +14,9 @@ import org.springframework.web.bind.annotation.ResponseBody
 
 @Controller
 open class FeedsController @Autowired constructor(
-        val auctionHouseDataDao: AuctionHouseDataDao,
-        val auctionHouseAggregateDao: AuctionHouseAggregateDao
+        private val auctionHouseDataDao: AuctionHouseDataDao,
+        private val auctionHouseAggregateDao: AuctionHouseAggregateDao
 ) {
-
 
     @RequestMapping(path = arrayOf("/api/feeds/{key}/"), method = arrayOf(RequestMethod.GET))
     @ResponseBody

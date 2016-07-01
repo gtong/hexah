@@ -11,9 +11,9 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
+open class HexObjectDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate) {
 
-    val mapper = RowMapper { rs, rowNum ->
+    private val mapper = RowMapper { rs, rowNum ->
         HexObject(
                 id = rs.getInt("id"),
                 created = rs.getTimestamp("created"),
@@ -27,8 +27,8 @@ open class HexObjectDao @Autowired constructor(val jdbcTemplate: JdbcTemplate) {
                 alternateArt = rs.getBoolean("alternate_art")
         )
     }
-    val table = "hex_objects"
-    val columns = "id, created, updated, guid, set_guid, type, name, rarity, name_key, alternate_art"
+    private val table = "hex_objects"
+    private val columns = "id, created, updated, guid, set_guid, type, name, rarity, name_key, alternate_art"
 
     open fun add(guid: String, setGuid: String?, type: HexObjectType, name: String, rarity: HexObjectRarity, nameKey: String, alternateArt: Boolean): Int {
         val now = Date()
