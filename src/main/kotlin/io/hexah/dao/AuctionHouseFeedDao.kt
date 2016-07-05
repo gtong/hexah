@@ -25,7 +25,7 @@ open class AuctionHouseFeedDao @Autowired constructor(private val jdbcTemplate: 
     private val table = "auction_house_feeds"
     private val columns = "filename, created, updated, type, in_progress, num_loaded, completed"
 
-    open fun add(filename: String, type: AuctionHouseFeedType) {
+    open fun create(filename: String, type: AuctionHouseFeedType) {
         val now = Date()
         jdbcTemplate.update(
                 "insert into $table (filename, created, updated, type) values (?, ?, ?, ?)",

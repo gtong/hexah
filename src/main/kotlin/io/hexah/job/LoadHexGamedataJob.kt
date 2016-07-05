@@ -124,7 +124,7 @@ open class LoadHexGamedataJob @Autowired constructor(
             val rarity = if (rarityKey == null) HexObjectRarity.Unknown else HexObjectRarity.valueOf(json.get(rarityKey).asString)
             val nameKey = getNameKey(name, rarity)
             val alternateArt = if (alternateArtKey == null) false else json.get(alternateArtKey).asInt == 1
-            hexObjectDao.add(guid, setGuid, type, name, rarity, nameKey, alternateArt)
+            hexObjectDao.create(guid, setGuid, type, name, rarity, nameKey, alternateArt)
             stats.added++
         } catch (e: Throwable) {
             log.error("Error adding $type [$content]", e)

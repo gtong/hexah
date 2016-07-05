@@ -146,7 +146,7 @@ open class LoadAuctionHouseDataJob @Autowired constructor(
             lines.groupBy { Pair(it.rarity, it.currency) }.forEach { entry ->
                 val (rarity, currency) = entry.key
                 val sorted = entry.value.map { it.price }.sorted()
-                auctionHouseDataDao.add(
+                auctionHouseDataDao.create(
                         date = ref.date,
                         name = name,
                         rarity = rarity,

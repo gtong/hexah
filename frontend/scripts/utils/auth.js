@@ -21,7 +21,9 @@ class Auth {
   }
 
   login(callback) {
-    this.lock.show(callback)
+    this.lock.show({
+      rememberLastLogin: true
+    }, callback)
   }
 
   getToken() {

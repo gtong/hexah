@@ -48,12 +48,12 @@ open class AuctionHouseAggregateDao @Autowired constructor(private val jdbcTempl
         pgStats.type = "JSON"
         pgStats.value = toJson(stats)
         if (list.isEmpty()) {
-            jdbcTemplate.update("""insert into auction_house_aggregates
+            jdbcTemplate.update("""insert into $table
                     (name, rarity, name_key, currency, created, updated, stats) values (?, ?, ?, ?, ?, ?, ?)""",
                     name, rarity.db, nameKey, currency.db, now, now, pgStats
             )
         } else {
-            jdbcTemplate.update("""update auction_house_aggregates
+            jdbcTemplate.update("""update $table
                     set updated = ?, stats = ? where name_key = ? AND currency = ?""",
                     now, pgStats, nameKey, currency.db
             )

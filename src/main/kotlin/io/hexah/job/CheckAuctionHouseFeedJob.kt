@@ -42,7 +42,7 @@ open class CheckAuctionHouseFeedJob @Autowired constructor(
                     feeds.contains(filename) -> stats.exists++
                     regex.matches(filename) -> {
                         stats.newFeeds++
-                        auctionHouseFeedDao.add(filename, AuctionHouseFeedType.All)
+                        auctionHouseFeedDao.create(filename, AuctionHouseFeedType.All)
                     }
                     else -> stats.ignored++
                 }

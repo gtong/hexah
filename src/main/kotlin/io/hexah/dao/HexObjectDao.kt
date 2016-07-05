@@ -30,7 +30,7 @@ open class HexObjectDao @Autowired constructor(private val jdbcTemplate: JdbcTem
     private val table = "hex_objects"
     private val columns = "id, created, updated, guid, set_guid, type, name, rarity, name_key, alternate_art"
 
-    open fun add(guid: String, setGuid: String?, type: HexObjectType, name: String, rarity: HexObjectRarity, nameKey: String, alternateArt: Boolean): Int {
+    open fun create(guid: String, setGuid: String?, type: HexObjectType, name: String, rarity: HexObjectRarity, nameKey: String, alternateArt: Boolean): Int {
         val now = Date()
         val insert = SimpleJdbcInsert(jdbcTemplate).withTableName(table).usingGeneratedKeyColumns("id")
 
@@ -49,8 +49,6 @@ open class HexObjectDao @Autowired constructor(private val jdbcTemplate: JdbcTem
         return id.toInt()
     }
 
-    open fun findAll(): List<HexObject> {
-        return jdbcTemplate.query("select $columns from $table", mapper)
-    }
+    open fun findAll() = jdbcTemplate.query("select $columns from $table", mapper)
 
 }

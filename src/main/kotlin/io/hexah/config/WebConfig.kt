@@ -1,6 +1,7 @@
 package io.hexah.config
 
 import io.hexah.controller.handler.AuthHandler
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer
 import org.springframework.boot.context.embedded.ErrorPage
@@ -11,16 +12,16 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 @Configuration
-open class WebConfig: WebMvcConfigurerAdapter() {
+open class WebConfig : WebMvcConfigurerAdapter() {
+
+    @Autowired
+    lateinit private var authHandler: AuthHandler
 
     @Bean
     open fun notFoundCustomizer() = NotFoundCustomizer()
 
-    @Bean
-    open fun authInterceptor() = AuthHandler()
-
     override fun addInterceptors(registry: InterceptorRegistry) {
-        registry.addInterceptor(authInterceptor())
+        registry.addInterceptor(authHandler)
     }
 
     class NotFoundCustomizer : EmbeddedServletContainerCustomizer {
