@@ -29,6 +29,8 @@ open class UserDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate
 
     open fun findAll() = jdbcTemplate.query("select $columns from $table order by id", mapper)
 
+    open fun findById(id: Int) = jdbcTemplate.queryForObject("select $columns from $table where id = ?", mapper, id)
+
     open fun create(email: String, status: UserStatus, guid: String): Int {
         val now = Date()
         val insert = SimpleJdbcInsert(jdbcTemplate).withTableName(table).usingGeneratedKeyColumns("id")
