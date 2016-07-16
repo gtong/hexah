@@ -1,7 +1,7 @@
 package io.hexah.controller.handler
 
 import com.auth0.authentication.AuthenticationAPIClient
-import io.hexah.controller.UnauthorizedException
+import io.hexah.controller.handler.UnauthorizedException
 import io.hexah.dao.UserDao
 import io.hexah.manager.UserManager
 import io.hexah.model.UserStatus

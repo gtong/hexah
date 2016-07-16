@@ -1,5 +1,6 @@
 package io.hexah.controller
 
+import io.hexah.controller.handler.NotFoundException
 import io.hexah.dao.AuctionHouseAggregateDao
 import io.hexah.dao.AuctionHouseDataDao
 import io.hexah.model.AuctionHouseCurrency

@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseBody
 
 @Controller
-open class ObjectsController @Autowired constructor(private val auctionHouseAggregateDao: AuctionHouseAggregateDao) {
+open class ObjectsController @Autowired constructor(
+        private val auctionHouseAggregateDao: AuctionHouseAggregateDao
+) {
 
     @RequestMapping(path = arrayOf("/api/objects/"), method = arrayOf(RequestMethod.GET))
     @ResponseBody
