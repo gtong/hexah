@@ -36,7 +36,7 @@ open class AuctionHouseAggregateDao @Autowired constructor(private val jdbcTempl
     private val columns = "name, rarity, name_key, currency, created, updated, stats"
 
     open fun findNames()
-            = jdbcTemplate.query("select name, rarity, name_key from $table group by name, rarity, name_key", nameMapper);
+            = jdbcTemplate.query("select name, rarity, name_key from $table group by name, rarity, name_key", nameMapper)
 
     open fun findByNameKey(nameKey: String)
             = jdbcTemplate.query("select $columns from $table where name_key = ?", mapper, nameKey)

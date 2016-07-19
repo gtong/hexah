@@ -34,7 +34,7 @@ data class ErrorResponse(
         val timestamp: Date = Date()
 )
 
-open abstract class ControllerException : RuntimeException {
+abstract class ControllerException : RuntimeException {
     val status: HttpStatus
     val reason: String
 

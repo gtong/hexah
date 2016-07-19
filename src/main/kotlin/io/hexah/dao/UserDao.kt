@@ -20,12 +20,13 @@ open class UserDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate
                 email = rs.getString("email"),
                 status = UserStatus.fromDB(rs.getString("status")[0]),
                 guid = rs.getString("guid"),
+                selling = rs.getBoolean("selling"),
                 lastActive = rs.getTimestamp("last_active"),
                 hexUser = rs.getString("hex_user")
         )
     }
     private val table = "users"
-    private val columns = "id, created, updated, email, status, guid, last_active, hex_user"
+    private val columns = "id, created, updated, email, status, guid, selling, last_active, hex_user"
 
     open fun findAll() = jdbcTemplate.query("select $columns from $table order by id", mapper)
 
@@ -33,7 +34,7 @@ open class UserDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate
 
     open fun findByGuid(guid: String) = jdbcTemplate.queryForObject("select $columns from $table where guid = ?::uuid", mapper, guid)
 
-    open fun create(email: String, status: UserStatus, guid: String): Int {
+    open fun create(email: String, status: UserStatus, guid: String, selling: Boolean): Int {
         val now = Date()
         val insert = SimpleJdbcInsert(jdbcTemplate).withTableName(table).usingGeneratedKeyColumns("id")
 
@@ -43,10 +44,15 @@ open class UserDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate
                 "email" to email,
                 "status" to status.db,
                 "guid" to guid,
+                "selling" to selling,
                 "last_active" to now
         ))
 
         return id.toInt()
+    }
+
+    open fun updateLastActive(id: Int, timestamp: Date) {
+        jdbcTemplate.update("update $table set last_active = ? where id = ?", timestamp, id)
     }
 
 }
