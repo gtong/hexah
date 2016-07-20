@@ -17,7 +17,8 @@ data class User(
         val email: String,
         val status: UserStatus,
         val guid: String,
-        val selling: Boolean,
         val lastActive: Date,
-        val hexUser: String?
+        val hexUser: String?,
+        val sellCards: Boolean,
+        val sellEquipment: Boolean
 )

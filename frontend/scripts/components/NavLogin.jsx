@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import { Link } from 'react-router'
 import auth from '../utils/auth';
 
 class NavLogin extends Component {
@@ -7,6 +8,7 @@ class NavLogin extends Component {
     this.login = this.login.bind(this);
     this.loginCallback = this.loginCallback.bind(this);
     this.state = {
+      loggedIn: auth.loggedIn()
     };
   }
 
@@ -15,15 +17,17 @@ class NavLogin extends Component {
   }
 
   loginCallback(err, profile, token) {
-    console.log(err);
-    console.log(profile);
-    console.log(token);
+    this.setState({
+      loggedIn: auth.loggedIn()
+    });
   }
 
   render() {
-    return (
-      <a className="ui item" onClick={this.login}>Sign In</a>
-    );
+    if (this.state.loggedIn) {
+      return (<Link className="ui item" to={'/profile'}>Profile</Link>);
+    } else {
+      return (<a className="ui item" onClick={this.login}>Sign In</a>);
+    }
   }
 }
 

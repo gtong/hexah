@@ -19,22 +19,22 @@ open class UserItemDao @Autowired constructor(private val jdbcTemplate: JdbcTemp
                 type = UserItemType.fromDB(rs.getString("type")[0]),
                 updated = rs.getTimestamp("updated"),
                 number = rs.getInt("number"),
-                selling = rs.getBoolean("selling")
+                sell = rs.getBoolean("sell")
         )
     }
     private val table = "user_items"
-    private val columns = "user_id, item_guid, type, updated, number, selling"
+    private val columns = "user_id, item_guid, type, updated, number, sell"
 
     open fun findByUserIdAndType(userId: Int, type: UserItemType)
             = jdbcTemplate.query("select $columns from $table where user_id = ? and type = ?", mapper, userId, type.db)
 
-    open fun createIfNotCreated(userId: Int, itemGuid: String, type: UserItemType, number: Int, selling: Boolean) {
+    open fun createIfNotCreated(userId: Int, itemGuid: String, type: UserItemType, number: Int, sell: Boolean) {
         val now = Date()
 
         jdbcTemplate.update("""insert into $table
-                (user_id, item_guid, type, updated, number, selling)
+                (user_id, item_guid, type, updated, number, sell)
                 values (?, ?::uuid, ?, ?, ?, ?) on conflict do nothing""",
-                userId, itemGuid, type.db, now, number, selling
+                userId, itemGuid, type.db, now, number, sell
         )
     }
 

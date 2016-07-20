@@ -22,7 +22,7 @@ open class UserManager @Autowired constructor(private val userDao: UserDao) {
             return cache[email]!!
         }
         // Create the user if not in cache
-        val id = userDao.create(email, UserStatus.Unverified, UUID.randomUUID().toString(), true)
+        val id = userDao.create(email, UserStatus.Unverified, UUID.randomUUID().toString(), true, true)
 
         // Refresh the cache again
         cache = userDao.findAll().associate { Pair(it.email, it.id) }

@@ -6,14 +6,15 @@ class Auth {
   constructor(clientId, domain) {
     // Configure Auth0
     this.lock = new Auth0Lock(clientId, domain, {})
-    // Add callback for lock `authenticated` event
-    this.lock.on('authenticated', this.handleAuthentication.bind(this))
     // binds login functions to keep this context
     this.login = this.login.bind(this)
+    this.handleAuthentication = this.handleAuthentication.bind(this)
   }
 
-  handleAuthentication(authResult) {
-  	localStorage.setItem(AUTH_KEY, authResult.idToken)
+  handleAuthentication(err, profile, token) {
+    if (err == null) {
+      localStorage.setItem(AUTH_KEY, token)
+    }
   }
 
   loggedIn() {
@@ -21,9 +22,15 @@ class Auth {
   }
 
   login(callback) {
+    let that = this
     this.lock.show({
       rememberLastLogin: true
-    }, callback)
+    }, function(err, profile, token) {
+      that.handleAuthentication(err, profile, token);
+      if (typeof callback === 'function') {
+        callback(err, profile, token);
+      }
+    });
   }
 
   getToken() {
