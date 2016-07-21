@@ -2,6 +2,7 @@ CREATE TABLE users (
   id serial primary key,
   created timestamp with time zone not null,
   updated timestamp with time zone not null,
+  deleted timestamp with time zone,
   email varchar(512) unique not null,
   status char not null,
   guid uuid unique not null,
@@ -18,6 +19,7 @@ CREATE TABLE user_items (
   updated timestamp with time zone not null,
   number integer not null,
   sell boolean not null,
+  in_transactions integer not null,
   primary key(user_id, item_guid)
 );
 CREATE INDEX guid_number_idx ON user_items (item_guid, number);

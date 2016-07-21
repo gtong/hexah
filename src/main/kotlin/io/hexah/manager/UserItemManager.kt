@@ -50,6 +50,7 @@ open class UserItemManager @Autowired constructor(
                 for((key, item) in toRemove) {
                     userItemDao.updateCountIfNotUpdated(user.id, item.itemGuid, 0, item.updated)
                 }
+                userManager.updateVerification(user, json["User"].asString)
             }
         }
     }

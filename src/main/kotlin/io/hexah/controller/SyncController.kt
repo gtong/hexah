@@ -33,6 +33,7 @@ open class SyncController @Autowired constructor(
             throw NotFoundException(t)
         }
         val json = parser.parse(request.reader).asJsonObject
+        log.info("Sync: ${json["Message"]}")
         userItemManager.sync(user, json)
     }
 

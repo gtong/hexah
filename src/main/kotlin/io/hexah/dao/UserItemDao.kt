@@ -19,11 +19,12 @@ open class UserItemDao @Autowired constructor(private val jdbcTemplate: JdbcTemp
                 type = UserItemType.fromDB(rs.getString("type")[0]),
                 updated = rs.getTimestamp("updated"),
                 number = rs.getInt("number"),
-                sell = rs.getBoolean("sell")
+                sell = rs.getBoolean("sell"),
+                inTransactions = rs.getInt("in_transactions")
         )
     }
     private val table = "user_items"
-    private val columns = "user_id, item_guid, type, updated, number, sell"
+    private val columns = "user_id, item_guid, type, updated, number, sell, in_transactions"
 
     open fun findByUserIdAndType(userId: Int, type: UserItemType)
             = jdbcTemplate.query("select $columns from $table where user_id = ? and type = ?", mapper, userId, type.db)
@@ -32,9 +33,9 @@ open class UserItemDao @Autowired constructor(private val jdbcTemplate: JdbcTemp
         val now = Date()
 
         jdbcTemplate.update("""insert into $table
-                (user_id, item_guid, type, updated, number, sell)
-                values (?, ?::uuid, ?, ?, ?, ?) on conflict do nothing""",
-                userId, itemGuid, type.db, now, number, sell
+                (user_id, item_guid, type, updated, number, sell, in_transactions)
+                values (?, ?::uuid, ?, ?, ?, ?, ?) on conflict do nothing""",
+                userId, itemGuid, type.db, now, number, sell, 0
         )
     }
 

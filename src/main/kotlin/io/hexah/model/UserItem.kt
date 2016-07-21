@@ -16,5 +16,6 @@ data class UserItem(
         val type: UserItemType,
         val updated: Date,
         val number: Int,
+        val inTransactions: Int,
         val sell: Boolean
 )

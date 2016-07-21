@@ -3,7 +3,7 @@ package io.hexah.model
 import java.util.*
 
 enum class UserStatus(val db: Char) {
-    Unverified('u'), Verified('v');
+    Unverified('u'), Verified('v'), Duplicate('d');
 
     companion object {
         fun fromDB(db: Char): UserStatus = UserStatus.values().single { it.db == db }

@@ -1,6 +1,7 @@
 package io.hexah.manager
 
 import io.hexah.dao.UserDao
+import io.hexah.model.User
 import io.hexah.model.UserStatus
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,6 +33,22 @@ open class UserManager @Autowired constructor(private val userDao: UserDao) {
 
     fun updateLastActive(id: Int) {
         userDao.updateLastActive(id, Date())
+    }
+
+    fun updateVerification(user: User, hexUser: String?) {
+        if (hexUser == null || hexUser.length == 0) {
+            return
+        }
+        // Do a case insensitive comparison in case we get mixed case
+        if (user.hexUser?.toLowerCase() != hexUser.toLowerCase()) {
+            // If there's a name change, check for a duplicate
+            val existing = userDao.findOtherVerifiedHexUser(user.id, hexUser)
+            if (existing == null) {
+                userDao.updateStatusAndHexuser(user.id, UserStatus.Verified, hexUser)
+            } else {
+                userDao.updateStatusAndHexuser(user.id, UserStatus.Duplicate, hexUser)
+            }
+        }
     }
 
 }

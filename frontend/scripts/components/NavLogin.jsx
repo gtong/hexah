@@ -24,7 +24,11 @@ class NavLogin extends Component {
 
   render() {
     if (this.state.loggedIn) {
-      return (<Link className="ui item" to={'/profile'}>Profile</Link>);
+      return (
+        <div className="ui icon item">
+          <Link to={'/profile'}><i className="user icon"></i></Link>
+        </div>
+      );
     } else {
       return (<a className="ui item" onClick={this.login}>Sign In</a>);
     }

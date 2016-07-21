@@ -29,11 +29,16 @@ open class UserDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate
     private val table = "users"
     private val columns = "id, created, updated, email, status, guid, last_active, hex_user, sell_cards, sell_equipment"
 
-    open fun findAll() = jdbcTemplate.query("select $columns from $table order by id", mapper)
+    open fun findAll() = jdbcTemplate.query("select $columns from $table where deleted is null order by id", mapper)
 
     open fun findById(id: Int) = jdbcTemplate.queryForObject("select $columns from $table where id = ?", mapper, id)
 
     open fun findByGuid(guid: String) = jdbcTemplate.queryForObject("select $columns from $table where guid = ?::uuid", mapper, guid)
+
+    open fun findOtherVerifiedHexUser(id: Int, hexUser: String) =
+            jdbcTemplate.query(
+                    "select $columns from $table where id <> ? and hex_user = ? and status = ? and deleted is null", mapper,
+                    id, hexUser, UserStatus.Verified.db).elementAtOrNull(0)
 
     open fun create(email: String, status: UserStatus, guid: String, sellCards: Boolean, sellEquipment: Boolean): Int {
         val now = Date()
@@ -55,6 +60,11 @@ open class UserDao @Autowired constructor(private val jdbcTemplate: JdbcTemplate
 
     open fun updateLastActive(id: Int, timestamp: Date) {
         jdbcTemplate.update("update $table set last_active = ? where id = ?", timestamp, id)
+    }
+
+    open fun updateStatusAndHexuser(id: Int, status: UserStatus, hexUser: String) {
+        val now = Date()
+        jdbcTemplate.update("update $table set status = ?, hex_user = ?, updated = ? where id = ?", status.db, hexUser, now, id)
     }
 
 }

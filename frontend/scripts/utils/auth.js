@@ -5,20 +5,20 @@ const AUTH_KEY = "auth_token";
 class Auth {
   constructor(clientId, domain) {
     // Configure Auth0
-    this.lock = new Auth0Lock(clientId, domain, {})
+    this.lock = new Auth0Lock(clientId, domain, {});
     // binds login functions to keep this context
-    this.login = this.login.bind(this)
-    this.handleAuthentication = this.handleAuthentication.bind(this)
+    this.login = this.login.bind(this);
+    this.handleAuthentication = this.handleAuthentication.bind(this);
   }
 
   handleAuthentication(err, profile, token) {
     if (err == null) {
-      localStorage.setItem(AUTH_KEY, token)
+      localStorage.setItem(AUTH_KEY, token);
     }
   }
 
   loggedIn() {
-    return !!this.getToken()
+    return !!this.getToken();
   }
 
   login(callback) {
@@ -34,7 +34,7 @@ class Auth {
   }
 
   getToken() {
-    return localStorage.getItem(AUTH_KEY)
+    return localStorage.getItem(AUTH_KEY);
   }
 
   logout() {
