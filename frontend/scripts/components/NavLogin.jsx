@@ -16,7 +16,7 @@ class NavLogin extends Component {
     auth.login(this.loginCallback);
   }
 
-  loginCallback(err, profile, token) {
+  loginCallback() {
     this.setState({
       loggedIn: auth.loggedIn()
     });
