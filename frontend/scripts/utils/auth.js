@@ -24,6 +24,11 @@ class Auth {
     }
   }
 
+  logout() {
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+  }
+
   loggedIn() {
     let token = this.getToken();
     if (token) {
@@ -38,11 +43,6 @@ class Auth {
     } else {
       return false;
     }
-  }
-
-  logout() {
-    localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem(REFRESH_KEY);
   }
 
   withToken(callback) {
@@ -85,11 +85,12 @@ class Auth {
 
   refreshLogin(callback) {
     let refreshToken = localStorage.getItem(REFRESH_KEY);
+    let that = this
     if (refreshToken) {
       this.refreshing = true;
       this.lock.getClient().refreshToken(refreshToken, function(err, result) {
-        this.refreshing = false;
-        this.handleAuthentication(err, result.id_token, refreshToken);
+        that.refreshing = false;
+        that.handleAuthentication(err, result.id_token, refreshToken);
         if (typeof callback === 'function') {
           callback();
         }
